@@ -1,0 +1,151 @@
+<Window x:Class="Multi_Desktop.MusicPlayerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Width="310" Height="400"
+        Deactivated="Window_Deactivated">
+
+    <Border x:Name="WindowBorder" CornerRadius="12" Padding="0"
+            BorderBrush="#30ffffff" BorderThickness="0.8">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#f22a2a38" Offset="0"/>
+                <GradientStop Color="#f5222230" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="6" Color="#000000" Opacity="0.45"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- サービスタブバー -->
+            <Border Grid.Row="0" Padding="8,8,8,4">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Border x:Name="YouTubeTab" CornerRadius="8" Padding="12,6"
+                            Margin="0,0,4,0" Cursor="Hand" Background="#22ffffff"
+                            MouseLeftButtonUp="YouTubeTab_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="▶" FontSize="11" Foreground="#FF4444"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="YouTube" FontSize="10.5" Foreground="White"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="AmazonTab" CornerRadius="8" Padding="12,6"
+                            Margin="0,0,4,0" Cursor="Hand" Background="#22ffffff"
+                            MouseLeftButtonUp="AmazonTab_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="♪" FontSize="11" Foreground="#25D1DA"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Amazon" FontSize="10.5" Foreground="White"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="SpotifyTab" CornerRadius="8" Padding="12,6"
+                            Cursor="Hand" Background="#22ffffff"
+                            MouseLeftButtonUp="SpotifyTab_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="●" FontSize="9" Foreground="#1DB954"
+                                       VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <TextBlock Text="Spotify" FontSize="10.5" Foreground="White"
+                                       FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- WebView2 エリア -->
+            <Border Grid.Row="1" CornerRadius="6" Margin="8,4,8,4"
+                    Background="#11ffffff" ClipToBounds="True">
+                <Grid>
+                    <wv2:WebView2 x:Name="MusicWebView" Visibility="Collapsed"/>
+                    <!-- ローディング / 未設定表示 -->
+                    <StackPanel x:Name="PlaceholderPanel"
+                                VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock x:Name="PlaceholderText"
+                                   Text="サービスを選択してください"
+                                   FontSize="12" Foreground="#55ffffff"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="PlaceholderSubText"
+                                   Text="設定画面でサービスを有効にしてください"
+                                   FontSize="10" Foreground="#33ffffff"
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- コントロールバー -->
+            <Border Grid.Row="2" Padding="10,6,10,10">
+                <DockPanel>
+                    <!-- 左側: 再生コントロール -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                        <Border CornerRadius="6" Padding="6,4" Cursor="Hand" Background="#18ffffff"
+                                Margin="0,0,3,0" MouseLeftButtonUp="PrevTrack_Click">
+                            <TextBlock Text="&#xE892;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="11" Foreground="#bbffffff" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border CornerRadius="6" Padding="8,4" Cursor="Hand" Background="#22ffffff"
+                                Margin="0,0,3,0" MouseLeftButtonUp="PlayPause_Click">
+                            <TextBlock x:Name="PlayPauseIcon" Text="&#xE768;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="13" Foreground="White" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border CornerRadius="6" Padding="6,4" Cursor="Hand" Background="#18ffffff"
+                                Margin="0,0,3,0" MouseLeftButtonUp="NextTrack_Click">
+                            <TextBlock Text="&#xE893;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="11" Foreground="#bbffffff" VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- 右側: PIP + 戻る/進む + 閉じる -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Border CornerRadius="6" Padding="6,4" Cursor="Hand" Background="#18ffffff"
+                                Margin="0,0,3,0" MouseLeftButtonUp="GoBack_Click"
+                                ToolTip="戻る">
+                            <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10" Foreground="#88ffffff" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border CornerRadius="6" Padding="6,4" Cursor="Hand" Background="#18ffffff"
+                                Margin="0,0,3,0" MouseLeftButtonUp="Refresh_Click"
+                                ToolTip="更新">
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10" Foreground="#88ffffff" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border x:Name="PipButton" CornerRadius="6" Padding="6,4" Cursor="Hand"
+                                Background="#18ffffff" Margin="0,0,3,0"
+                                MouseLeftButtonUp="PiP_Click"
+                                ToolTip="ピクチャー・イン・ピクチャー" Visibility="Collapsed">
+                            <TextBlock Text="&#xE8A7;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10" Foreground="#88ccffff" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border CornerRadius="6" Padding="6,4" Cursor="Hand" Background="#18ffffff"
+                                Margin="0,0,3,0"
+                                MouseLeftButtonUp="MinimizePlayer_Click"
+                                ToolTip="最小化（バックグラウンド再生）">
+                            <TextBlock Text="&#xE949;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10" Foreground="#88ffffff" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border CornerRadius="6" Padding="6,4" Cursor="Hand" Background="#18ffffff"
+                                MouseLeftButtonUp="ClosePlayer_Click"
+                                ToolTip="閉じる">
+                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10" Foreground="#88ffffff" VerticalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

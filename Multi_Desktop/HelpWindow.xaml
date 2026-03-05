@@ -1,0 +1,90 @@
+<Window x:Class="Multi_Desktop.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="システムバー ヘルプ" Height="600" Width="450"
+        WindowStartupLocation="CenterScreen"
+        Background="#222222" Foreground="White"
+        WindowStyle="None" AllowsTransparency="True" ResizeMode="NoResize">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- Custom Window Chrome (Borderless) -->
+    <Border CornerRadius="8" Background="#1c1c1e" BorderBrush="#33ffffff" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title Bar -->
+            <Grid Grid.Row="0" Background="#11ffffff" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <TextBlock Text="システムバー ヘルプガイド" FontWeight="Bold" FontSize="16"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Width="36" Height="36" Margin="0,0,8,0"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="White" FontSize="14"
+                        Click="CloseButton_Click" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="18">
+                                <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#44ffffff"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+
+            <!-- Content Area -->
+            <ScrollViewer Grid.Row="1" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="機能の概要" FontSize="20" FontWeight="Bold" Margin="0,0,0,12"/>
+                    <TextBlock Text="デスクトップ上部に表示されるシステムバーは、様々な機能へアクセスできます。"
+                               Foreground="#cccccc" TextWrapping="Wrap" Margin="0,0,0,24"/>
+
+                    <!-- Menu Bar Image -->
+                    <Border CornerRadius="6" Background="#11ffffff" Padding="4" Margin="0,0,0,16">
+                        <Image Source="pack://application:,,,/Assets/Help_MenuBar.png" Stretch="Uniform"
+                               MaxHeight="120" ToolTip="システムバー全体のスクリーンショット"/>
+                    </Border>
+
+                    <TextBlock Text="1. Windows メニュー" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="左端のWindowsロゴをクリックすると、Windowsの標準スタートメニューが開きます。"
+                               Foreground="#cccccc" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="2. コントロールセンター" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="Wi-FiやBluetooth、音量、画面の明るさなどに素早くアクセスできます。右上のアイコン群をクリックすると開きます。"
+                               Foreground="#cccccc" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <!-- Control Center Image -->
+                    <Border CornerRadius="6" Background="#11ffffff" Padding="4" Margin="0,0,0,16">
+                        <Image Source="pack://application:,,,/Assets/Help_ControlCenter.png" Stretch="Uniform"
+                               MaxHeight="300" ToolTip="コントロールセンターのスクリーンショット"/>
+                    </Border>
+
+                    <TextBlock Text="3. 通知とカレンダー" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="時計をクリックすると、カレンダーとWindowsの通知履歴を確認できます。通知をクリックすると該当アプリが起動します。「クリア」で通知を一括既読にできます。"
+                               Foreground="#cccccc" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                    <!-- Calendar & Notification Image -->
+                    <Border CornerRadius="6" Background="#11ffffff" Padding="4" Margin="0,0,0,24">
+                        <Image Source="pack://application:,,,/Assets/Help_Calendar.png" Stretch="Uniform"
+                               MaxHeight="300" ToolTip="通知・カレンダーのスクリーンショット"/>
+                    </Border>
+                    
+                    <TextBlock Text="4. 自動非表示" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                    <TextBlock Text="ウィンドウを全画面表示にした時など、設定によっては自動的に隠れます。"
+                               Foreground="#cccccc" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

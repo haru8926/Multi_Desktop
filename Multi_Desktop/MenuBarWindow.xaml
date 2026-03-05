@@ -1,0 +1,564 @@
+<Window x:Class="Multi_Desktop.MenuBarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="macOS MenuBar"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Height="28" Width="1920">
+
+    <Window.Resources>
+        <!-- メニューバーボタン共通スタイル -->
+        <Style x:Key="MenuBarButton" TargetType="Border">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="7,3"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- ポップアップ共通スタイル (macOS風ガラスモーフィズム) -->
+        <Style x:Key="MacPopup" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderBrush" Value="#30ffffff"/>
+            <Setter Property="BorderThickness" Value="0.8"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="24" ShadowDepth="6" Color="#000000" Opacity="0.45"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#ee2a2a38" Offset="0"/>
+                        <GradientStop Color="#f2222230" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- コントロールセンタータイルスタイル -->
+        <Style x:Key="CCTile" TargetType="Border">
+            <Setter Property="Background" Value="#22ffffff"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- コントロールセンタータイル（アクティブ状態） -->
+        <Style x:Key="CCTileActive" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#553498db" Offset="0"/>
+                        <GradientStop Color="#442980b9" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- スライダースタイル (macOS風) -->
+        <Style x:Key="MacSlider" TargetType="Slider">
+            <Setter Property="MinHeight" Value="22"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="100"/>
+            <Setter Property="IsSnapToTickEnabled" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid VerticalAlignment="Center" MinHeight="20">
+                            <!-- トラック背景 -->
+                            <Border Height="4" CornerRadius="2" Background="#33ffffff"
+                                    VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge" IsHitTestVisible="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate>
+                                                <Border Height="4" CornerRadius="2" Background="#aaffffff"
+                                                        VerticalAlignment="Center"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge" IsHitTestVisible="False">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate>
+                                                <Border Background="Transparent"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate>
+                                                <Ellipse Width="16" Height="16" Fill="White">
+                                                    <Ellipse.Effect>
+                                                        <DropShadowEffect BlurRadius="4" ShadowDepth="1"
+                                                                          Color="Black" Opacity="0.3"/>
+                                                    </Ellipse.Effect>
+                                                </Ellipse>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- メニューバー本体 -->
+        <Border x:Name="MenuBarBackground" Height="28" VerticalAlignment="Top">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#e01e1e2c" Offset="0"/>
+                    <GradientStop Color="#e51a1a28" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="6" ShadowDepth="1"
+                                  Color="Black" Opacity="0.25" Direction="270"/>
+            </Border.Effect>
+
+            <Border BorderBrush="#12ffffff" BorderThickness="0,0,0,0.6">
+                <DockPanel Margin="6,0">
+                    <!-- ========== 左側 ========== -->
+                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <!-- Windowsロゴ -->
+                        <Border x:Name="WindowsLogoButton"
+                                Style="{StaticResource MenuBarButton}" Padding="7,3"
+                                MouseLeftButtonUp="WindowsLogo_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave">
+                            <Grid Width="12" Height="12" VerticalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/><ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Rectangle Fill="White" RadiusX="0.5" RadiusY="0.5" Margin="0,0,0.8,0.8" Grid.Row="0" Grid.Column="0"/>
+                                <Rectangle Fill="White" RadiusX="0.5" RadiusY="0.5" Margin="0.8,0,0,0.8" Grid.Row="0" Grid.Column="1"/>
+                                <Rectangle Fill="White" RadiusX="0.5" RadiusY="0.5" Margin="0,0.8,0.8,0" Grid.Row="1" Grid.Column="0"/>
+                                <Rectangle Fill="White" RadiusX="0.5" RadiusY="0.5" Margin="0.8,0.8,0,0" Grid.Row="1" Grid.Column="1"/>
+                            </Grid>
+                        </Border>
+
+                        <Border Width="1" Height="12" Background="#22ffffff"
+                                Margin="2,0" VerticalAlignment="Center" CornerRadius="0.5"/>
+
+                        <!-- アクティブウィンドウ名 -->
+                        <TextBlock x:Name="ActiveWindowTitle" Text="Desktop"
+                                   FontFamily="Segoe UI Variable Display, Segoe UI"
+                                   FontSize="12.5" FontWeight="SemiBold"
+                                   Foreground="White" VerticalAlignment="Center"
+                                   Margin="6,0,0,0" MaxWidth="450"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+
+                    <!-- ========== 右側 ========== -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                VerticalAlignment="Center">
+
+                        <!-- コントロールセンター -->
+                        <Border x:Name="ControlCenterButton"
+                                Style="{StaticResource MenuBarButton}" Padding="5,3"
+                                MouseLeftButtonUp="ControlCenter_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave"
+                                ToolTip="コントロールセンター">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="NetworkIcon" Text="&#xE701;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                           Foreground="White" VerticalAlignment="Center"
+                                           Margin="0,0,1,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 音量 -->
+                        <Border x:Name="VolumeButton"
+                                Style="{StaticResource MenuBarButton}"
+                                MouseLeftButtonUp="Volume_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave"
+                                ToolTip="サウンド">
+                            <TextBlock x:Name="VolumeIcon" Text="&#xE767;"
+                                       FontFamily="Segoe MDL2 Assets" FontSize="12.5"
+                                       Foreground="White" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <!-- バッテリー -->
+                        <Border x:Name="BatteryButton"
+                                Style="{StaticResource MenuBarButton}"
+                                MouseLeftButtonUp="Battery_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave"
+                                Visibility="Collapsed" ToolTip="バッテリー">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="BatteryIcon" Text="&#xEBAA;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                           Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="BatteryPercent" Text="100%"
+                                           FontFamily="Segoe UI" FontSize="10.5"
+                                           Foreground="#bbffffff" VerticalAlignment="Center"
+                                           Margin="3,0,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    <!-- 時刻 -->
+                    <Border x:Name="ClockButton"
+                            Style="{StaticResource MenuBarButton}" Padding="6,3"
+                            MouseLeftButtonUp="Clock_Click"
+                            MouseEnter="MenuBarItem_MouseEnter"
+                            MouseLeave="MenuBarItem_MouseLeave">
+                        <TextBlock x:Name="ClockText" Text="3月5日(水) 10:07"
+                                   FontFamily="Segoe UI Variable Display, Segoe UI"
+                                   FontSize="12" Foreground="White"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- ヘルプボタン -->
+                    <Border x:Name="HelpButton"
+                            Style="{StaticResource MenuBarButton}" Padding="6,3" Margin="4,0,0,0"
+                            MouseLeftButtonUp="Help_Click"
+                            MouseEnter="MenuBarItem_MouseEnter"
+                            MouseLeave="MenuBarItem_MouseLeave" ToolTip="ヘルプ">
+                        <TextBlock Text="&#xE897;"
+                                   FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                   Foreground="White" VerticalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+
+                <Border/>
+            </DockPanel>
+            </Border>
+        </Border>
+
+        <!-- ========== カレンダー＋通知センターポップアップ ========== -->
+        <Popup x:Name="CalendarPopup" Placement="Bottom"
+               PlacementTarget="{Binding ElementName=ClockButton}"
+               StaysOpen="False" AllowsTransparency="True"
+               PopupAnimation="Fade" HorizontalOffset="-100">
+            <Border Style="{StaticResource MacPopup}" MinWidth="280" MaxWidth="300" Padding="16,14">
+                <StackPanel>
+                    <!-- 大きな時刻 -->
+                    <TextBlock x:Name="PopupTimeText" Text="10:07"
+                               FontFamily="Segoe UI Variable Display, Segoe UI"
+                               FontSize="42" FontWeight="Light"
+                               Foreground="White" HorizontalAlignment="Center"
+                               Margin="0,0,0,2"/>
+                    <!-- 日付 -->
+                    <TextBlock x:Name="PopupDateText" Text="2026年3月5日 木曜日"
+                               FontFamily="Segoe UI Variable Display, Segoe UI"
+                               FontSize="13"
+                               Foreground="#99ffffff" HorizontalAlignment="Center"
+                               Margin="0,0,0,12"/>
+
+                    <Border Height="0.6" Background="#20ffffff" Margin="-16,0" />
+
+                    <!-- カスタムカレンダー -->
+                    <StackPanel Margin="0,12,0,0">
+                        <!-- 月ナビゲーション -->
+                        <DockPanel Margin="0,0,0,8">
+                            <Border DockPanel.Dock="Left" CornerRadius="4"
+                                    Background="Transparent" Padding="4,2"
+                                    Cursor="Hand" MouseLeftButtonUp="CalendarPrev_Click">
+                                <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="11" Foreground="#99ffffff"/>
+                            </Border>
+                            <Border DockPanel.Dock="Right" CornerRadius="4"
+                                    Background="Transparent" Padding="4,2"
+                                    Cursor="Hand" MouseLeftButtonUp="CalendarNext_Click">
+                                <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="11" Foreground="#99ffffff"/>
+                            </Border>
+                            <TextBlock x:Name="CalendarMonthLabel" Text="2026年 3月"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI"
+                                       FontSize="13" FontWeight="SemiBold"
+                                       Foreground="White"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </DockPanel>
+
+                        <!-- 曜日ヘッダー -->
+                        <UniformGrid Columns="7" Margin="0,0,0,2">
+                            <TextBlock Text="日" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="月" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="火" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="水" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="木" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="金" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBlock Text="土" Foreground="#55ffffff" FontSize="10"
+                                       HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                        </UniformGrid>
+
+                        <!-- 日付グリッド -->
+                        <UniformGrid x:Name="CalendarDaysGrid" Columns="7"/>
+                    </StackPanel>
+
+                    <Border Height="0.6" Background="#20ffffff" Margin="-16,10,-16,0" />
+
+                    <!-- 通知センターセクション -->
+                    <DockPanel Margin="0,10,0,0">
+                        <TextBlock Text="通知" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="White" VerticalAlignment="Center"/>
+                        
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Border CornerRadius="4" Margin="0,0,8,0"
+                                    Background="Transparent" Padding="8,3"
+                                    Cursor="Hand" MouseLeftButtonUp="ClearAllNotifications_Click">
+                                <TextBlock Text="クリア" FontSize="10"
+                                           Foreground="#88ffffff"/>
+                            </Border>
+
+                            <Border CornerRadius="4"
+                                    Background="#22ffffff" Padding="8,3"
+                                    Cursor="Hand" MouseLeftButtonUp="OpenNotificationCenter_Click">
+                                <TextBlock Text="すべて表示" FontSize="10"
+                                           Foreground="#88ccffff"/>
+                            </Border>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- 通知リスト -->
+                    <StackPanel x:Name="NotificationList" Margin="0,8,0,0">
+                        <Border Background="#15ffffff" CornerRadius="8"
+                                Padding="12,10">
+                            <TextBlock Text="通知はありません"
+                                       FontSize="11.5" Foreground="#55ffffff"
+                                       HorizontalAlignment="Center"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- ========== 音量ポップアップ ========== -->
+        <Popup x:Name="VolumePopup" Placement="Bottom"
+               PlacementTarget="{Binding ElementName=VolumeButton}"
+               StaysOpen="False" AllowsTransparency="True"
+               PopupAnimation="Fade" HorizontalOffset="-60">
+            <Border Style="{StaticResource MacPopup}" MinWidth="200" Padding="16,14">
+                <StackPanel>
+                    <TextBlock Text="サウンド"
+                               FontFamily="Segoe UI Variable Display, Segoe UI"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="#88ffffff" Margin="0,0,0,10"/>
+
+                    <DockPanel>
+                        <Border DockPanel.Dock="Left" Margin="0,0,10,0"
+                                Cursor="Hand" MouseLeftButtonUp="VolumeMute_Click">
+                            <TextBlock x:Name="VolumePopupIcon" Text="&#xE767;"
+                                       FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                       Foreground="White" VerticalAlignment="Center"/>
+                        </Border>
+                        <Slider x:Name="VolumeSlider" Style="{StaticResource MacSlider}"
+                                VerticalAlignment="Center"
+                                ValueChanged="VolumeSlider_ValueChanged"/>
+                    </DockPanel>
+
+                    <TextBlock x:Name="VolumePercent" Text="50%"
+                               FontFamily="Segoe UI" FontSize="10.5"
+                               Foreground="#66ffffff" HorizontalAlignment="Right"
+                               Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- ========== コントロールセンターポップアップ ========== -->
+        <Popup x:Name="ControlCenterPopup" Placement="Bottom"
+               PlacementTarget="{Binding ElementName=ControlCenterButton}"
+               StaysOpen="False" AllowsTransparency="True"
+               PopupAnimation="Fade" HorizontalOffset="-130"
+               Opened="ControlCenterPopup_Opened" Closed="ControlCenterPopup_Closed">
+            <Border Style="{StaticResource MacPopup}" Width="310" Padding="14">
+                <StackPanel>
+                    <!-- タイルグリッド (Wi-Fi / Bluetooth / NightLight) -->
+                    <UniformGrid Columns="3" Rows="1" Margin="0,0,0,10">
+                        <!-- Wi-Fi タイル -->
+                        <Border x:Name="CC_WifiTile" Style="{StaticResource CCTileActive}"
+                                Margin="0,0,4,0" MouseLeftButtonUp="CC_Wifi_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock x:Name="CC_WifiIcon" Text="&#xE701;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                           Foreground="#60BFFF"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Wi-Fi" FontSize="10"
+                                           Foreground="White" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="CC_WifiStatus" Text="接続済み"
+                                           FontSize="9" Foreground="#77ffffff"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Bluetooth タイル -->
+                        <Border x:Name="CC_BluetoothTile" Style="{StaticResource CCTile}"
+                                Margin="2,0" MouseLeftButtonUp="CC_Bluetooth_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE702;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                           Foreground="#5088CC"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Bluetooth" FontSize="10"
+                                           Foreground="White" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock x:Name="CC_BluetoothStatus" Text="オフ"
+                                           FontSize="9" Foreground="#77ffffff"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 夜間モードタイル -->
+                        <Border x:Name="CC_NightTile" Style="{StaticResource CCTile}"
+                                Margin="4,0,0,0" MouseLeftButtonUp="CC_NightLight_Click">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="&#xEC46;"
+                                           FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                           Foreground="#FFB347"
+                                           HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="夜間" FontSize="10"
+                                           Foreground="White" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                                <TextBlock Text="オフ" FontSize="9" Foreground="#77ffffff"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- ディスプレイ -->
+                    <Border Style="{StaticResource CCTile}" Margin="0,0,0,6"
+                            Cursor="Hand" MouseLeftButtonUp="CC_Display_Click">
+                        <DockPanel>
+                            <TextBlock Text="&#xE706;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="14" Foreground="#FFBB44"
+                                       VerticalAlignment="Center" DockPanel.Dock="Left"
+                                       Margin="0,0,10,0"/>
+                            <TextBlock Text="ディスプレイ設定" FontSize="12"
+                                       Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="9" Foreground="#55ffffff"
+                                       VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- 音量スライダー -->
+                    <Border Background="#18ffffff" CornerRadius="10"
+                            Padding="12,14" Margin="0,0,0,6">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="&#xE767;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="13" Foreground="#66DD88"
+                                           VerticalAlignment="Center" DockPanel.Dock="Left"
+                                           Margin="0,0,8,0"/>
+                                <TextBlock Text="サウンド" FontSize="12"
+                                           Foreground="White" FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock x:Name="CC_VolumePercent" Text="50%"
+                                           FontSize="10.5" Foreground="#77ffffff"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Right"/>
+                            </DockPanel>
+                            <Slider x:Name="CC_VolumeSlider" Style="{StaticResource MacSlider}"
+                                    VerticalAlignment="Center"
+                                    ValueChanged="CC_VolumeSlider_ValueChanged"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Height="0.5" Background="#15ffffff" Margin="0,2,0,6"/>
+
+                    <!-- 🎵 ミュージックプレーヤー起動 -->
+                    <Border x:Name="CC_MusicTile" Style="{StaticResource CCTile}" Margin="0,0,0,6"
+                            Visibility="Collapsed"
+                            MouseLeftButtonUp="CC_Music_Click">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- 上段: アイコン + "ミュージック" + 矢印 -->
+                            <DockPanel Grid.Row="0">
+                                <TextBlock Text="&#xE8D6;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="14" Foreground="#c878ff"
+                                           VerticalAlignment="Center" DockPanel.Dock="Left"
+                                           Margin="0,0,10,0"/>
+                                <TextBlock Text="ミュージック" FontSize="12"
+                                           Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="9" Foreground="#55ffffff"
+                                           VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                            </DockPanel>
+
+                            <!-- 下段: Now Playing 情報 (再生中のみ表示) -->
+                            <Border x:Name="CC_NowPlayingPanel" Grid.Row="1"
+                                    Visibility="Collapsed" Margin="0,6,0,0"
+                                    Background="#15ffffff" CornerRadius="6" Padding="8,5">
+                                <DockPanel>
+                                    <TextBlock x:Name="CC_NowPlayingService"
+                                               Text="" FontSize="9" Foreground="#c878ff"
+                                               DockPanel.Dock="Left" VerticalAlignment="Center"
+                                               Margin="0,0,6,0" FontWeight="Bold"/>
+                                    <TextBlock x:Name="CC_NowPlayingTitle"
+                                               Text="" FontSize="10" Foreground="#ccffffff"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxWidth="200"/>
+                                </DockPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <!-- 🎵 埋め込み用プレースホルダー -->
+                    <Border x:Name="CC_MusicPlayerPlaceholder" Height="280" Margin="0,0,0,6" Visibility="Collapsed" />
+
+                    <Border Height="0.5" Background="#15ffffff" Margin="0,0,0,6"/>
+
+                    <!-- クイックアクション行 -->
+                    <UniformGrid Columns="2" Rows="1">
+                        <Border Style="{StaticResource CCTile}" Margin="0,0,3,0"
+                                MouseLeftButtonUp="CC_TaskManager_Click">
+                            <DockPanel>
+                                <TextBlock Text="&#xE7AC;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="14" Foreground="#88BBEE"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="タスク管理" FontSize="11"
+                                           Foreground="White" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CCTile}" Margin="3,0,0,0"
+                                MouseLeftButtonUp="CC_Settings_Click">
+                            <DockPanel>
+                                <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                           FontSize="14" Foreground="#AABBDD"
+                                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <TextBlock Text="設定" FontSize="11"
+                                           Foreground="White" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</Window>

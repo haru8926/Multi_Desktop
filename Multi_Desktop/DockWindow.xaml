@@ -1,0 +1,193 @@
+<Window x:Class="Multi_Desktop.DockWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MacOS Dock"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        Height="120" Width="800">
+
+    <Window.Resources>
+        <!-- ツールチップスタイル -->
+        <Style x:Key="DockToolTip" TargetType="ToolTip">
+            <Setter Property="Background" Value="#e0222222"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- プレビュー風ツールチップスタイル -->
+        <Style x:Key="ModernPreviewToolTip" TargetType="ToolTip">
+            <Setter Property="Background" Value="#151518"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#40ffffff"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Placement" Value="Top"/>
+            <Setter Property="VerticalOffset" Value="-12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToolTip">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="12,10">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" Opacity="0.6" ShadowDepth="4" Direction="270"/>
+                            </Border.Effect>
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- 右クリックメニュー (ContextMenu) -->
+        <Style x:Key="ModernContextMenu" TargetType="ContextMenu">
+            <Setter Property="Background" Value="#101015"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#40ffffff"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" Opacity="0.5" ShadowDepth="4"/>
+                            </Border.Effect>
+                            <ItemsPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- MenuItemスタイル -->
+        <Style x:Key="ModernMenuItem" TargetType="MenuItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="10,8,20,8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Border x:Name="BgBorder" Background="{TemplateBinding Background}" CornerRadius="6" Margin="2,1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentPresenter Content="{TemplateBinding Icon}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="BgBorder" Property="Background" Value="#33ffffff"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#88ffffff"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- メインDockコンテナ -->
+    <Grid x:Name="DockRootGrid" VerticalAlignment="Bottom" Margin="0,0,0,8">
+        <!-- Dock本体 -->
+        <Border x:Name="DockBackground"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Padding="10,8,12,10"
+                CornerRadius="18"
+                MinWidth="100">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#b8383850" Offset="0"/>
+                    <GradientStop Color="#d0252535" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4"
+                                  Color="Black" Opacity="0.5" Direction="270"/>
+            </Border.Effect>
+            <!-- ガラス風ボーダー -->
+            <Border CornerRadius="16"
+                    BorderBrush="#30ffffff"
+                    BorderThickness="1"
+                    Padding="4,2">
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Bottom">
+                    <!-- 設定ボタン (左端) — サイズはアイコンサイズに合わせて動的に設定 -->
+                    <Grid x:Name="SettingsButtonContainer"
+                          Margin="2,0,2,0"
+                          VerticalAlignment="Bottom"
+                          Cursor="Hand">
+                        <Border x:Name="SettingsButtonBorder"
+                                CornerRadius="12"
+                                Background="#28ffffff"
+                                VerticalAlignment="Bottom"
+                                RenderTransformOrigin="0.5,1.0">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <TextBlock x:Name="SettingsButtonIcon"
+                                       Text="⚙"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="#ccddff"/>
+                        </Border>
+                        <Grid.ToolTip>
+                            <ToolTip Content="Multi Desktop 設定"
+                                     Style="{StaticResource DockToolTip}"/>
+                        </Grid.ToolTip>
+                    </Grid>
+
+                    <!-- 設定ボタンとアイコンの区切り -->
+                    <Border x:Name="SettingsSeparator"
+                            Width="2"
+                            Background="#30ffffff"
+                            CornerRadius="1"
+                            Margin="4,0,6,6"
+                            VerticalAlignment="Bottom"/>
+
+                    <!-- アイコンパネル -->
+                    <StackPanel x:Name="DockIconPanel"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"/>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- 自動非表示用のホットゾーン -->
+        <Border x:Name="HotZone"
+                Height="4"
+                VerticalAlignment="Bottom"
+                Background="Transparent"
+                Visibility="Collapsed"/>
+    </Grid>
+</Window>
