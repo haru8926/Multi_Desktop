@@ -127,24 +127,16 @@ public partial class DockWindow : Window
     private Rect GetCurrentLogicalScreenBounds()
     {
         var p = System.Windows.Forms.Cursor.Position;
-        var screen = System.Windows.Forms.Screen.FromPoint(p);
-        var physicalRect = new Rect(screen.Bounds.X, screen.Bounds.Y, screen.Bounds.Width, screen.Bounds.Height);
-
-        var source = PresentationSource.FromVisual(this);
-        if (source?.CompositionTarget != null)
-        {
-            var transform = source.CompositionTarget.TransformFromDevice;
-            return new Rect(
-                transform.Transform(physicalRect.TopLeft),
-                transform.Transform(physicalRect.BottomRight));
-        }
-        return physicalRect;
+        return Helpers.NativeMethods.GetLogicalScreenBounds(new System.Windows.Point(p.X, p.Y));
     }
+
+    private Rect _currentDockBounds; // 表示をトリガーされたモニタの境界を保持
 
     /// <summary>Dockを現在画面の下部中央に配置（初期表示用）</summary>
     private void PositionDock()
     {
         var bounds = GetCurrentLogicalScreenBounds();
+        _currentDockBounds = bounds;
         SizeToContent = SizeToContent.Width;
         UpdateDockWidth(bounds);
         Top = bounds.Bottom - Height;
@@ -594,7 +586,7 @@ public partial class DockWindow : Window
     {
         if (_isAutoHidden) return;
 
-        var bounds = GetCurrentLogicalScreenBounds();
+        var bounds = _currentDockBounds; // 現在Dockが存在するディスプレイ情報を基準にする
         var mousePos = GetLogicalMousePosition();
         if (IsMouseOverDockArea(mousePos, bounds))
         {
@@ -621,6 +613,7 @@ public partial class DockWindow : Window
         _lastShowTime = DateTime.Now;
         _mouseIsOverDock = true;
         _outsideTickCount = 0;
+        _currentDockBounds = bounds; // 表示中の基準モニタ境界をロックする
 
         UpdateDockWidth(bounds);
 
@@ -683,11 +676,10 @@ public partial class DockWindow : Window
 
             if (_isAutoHidden)
             {
-                // 非表示中はポーリング間隔を空ける（150ms）
+                // 非表示中は常にマウスがあるモニタ基準で判定
                 if (_hotZoneTimer!.Interval.TotalMilliseconds < 140)
                     _hotZoneTimer.Interval = TimeSpan.FromMilliseconds(150);
 
-                // 画面最下部5pxにマウスがあったらDockを表示
                 if (mousePos.Y >= bounds.Bottom - 5)
                 {
                     AutoShowDock(bounds);
@@ -695,6 +687,8 @@ public partial class DockWindow : Window
             }
             else
             {
+                // 表示中はターゲットとしていたモニタ基準（1番ディスプレイなどへの座標引っ張られ防止）
+                bounds = _currentDockBounds;
                 // 表示中はポーリング間隔を短く（80ms）
                 if (_hotZoneTimer!.Interval.TotalMilliseconds > 100)
                     _hotZoneTimer.Interval = TimeSpan.FromMilliseconds(80);

@@ -821,10 +821,78 @@ public partial class MenuBarWindow : Window
         catch { }
     }
 
+    // ─── オーディオデバイス切り替え ─────────────────────────────────
+    private void ToggleAudioDevices_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (AudioDevicesList.Visibility == Visibility.Visible)
+        {
+            AudioDevicesList.Visibility = Visibility.Collapsed;
+            AudioDevicesToggleIcon.Text = "\xE70D"; // ChevronDown
+        }
+        else
+        {
+            AudioDevicesList.Visibility = Visibility.Visible;
+            AudioDevicesToggleIcon.Text = "\xE70E"; // ChevronUp
+            PopulateAudioDevicesList();
+        }
+    }
+
+    private void PopulateAudioDevicesList()
+    {
+        AudioDevicesList.Children.Clear();
+        var devices = VolumeHelper.GetAudioDevices();
+
+        foreach (var device in devices)
+        {
+            if (device.IsDefault)
+            {
+                CurrentAudioDeviceName.Text = device.Name;
+            }
+
+            var itemPanel = new DockPanel { Margin = new Thickness(0, 4, 0, 4), Background = System.Windows.Media.Brushes.Transparent, Cursor = System.Windows.Input.Cursors.Hand };
+            itemPanel.Tag = device.Id;
+            itemPanel.PreviewMouseLeftButtonDown += (s, e) =>
+            {
+                if (s is FrameworkElement fe && fe.Tag is string id)
+                {
+                    VolumeHelper.SetDefaultAudioDevice(id);
+                    PopulateAudioDevicesList(); // 選択後に再読み込みしてトグル更新
+                    UpdateVolumeUI(); // ボリュームスライダーを新しいデバイスに合わせる
+                }
+            };
+
+            var checkIcon = new TextBlock
+            {
+                Text = device.IsDefault ? "\xE73E" : "", // CheckMark
+                FontFamily = new System.Windows.Media.FontFamily("Segoe MDL2 Assets"),
+                FontSize = 10,
+                Foreground = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255)),
+                VerticalAlignment = VerticalAlignment.Center,
+                Width = 14,
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            DockPanel.SetDock(checkIcon, Dock.Left);
+            itemPanel.Children.Add(checkIcon);
+
+            var nameText = new TextBlock
+            {
+                Text = device.Name,
+                FontSize = 10,
+                Foreground = new System.Windows.Media.SolidColorBrush(
+                    device.IsDefault ? System.Windows.Media.Color.FromRgb(255, 255, 255) : System.Windows.Media.Color.FromRgb(170, 170, 170)),
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            itemPanel.Children.Add(nameText);
+
+            AudioDevicesList.Children.Add(itemPanel);
+        }
+    }
+
     // ─── 通知センター ──────────────────────────────────────
     private async void ClearAllNotifications_Click(object sender, MouseButtonEventArgs e)
     {
-        NotificationHelper.ClearAllNotifications();
+        await NotificationHelper.ClearAllNotificationsAsync();
         await LoadNotificationsAsync();
     }
 

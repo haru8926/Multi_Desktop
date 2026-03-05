@@ -110,12 +110,20 @@ internal static class NotificationHelper
     }
 
     /// <summary>すべての通知を既読(クリア)にする</summary>
-    public static void ClearAllNotifications()
+    public static async Task ClearAllNotificationsAsync()
     {
         try
         {
             var listener = UserNotificationListener.Current;
-            listener.ClearNotifications();
+            var notifications = await listener.GetNotificationsAsync(NotificationKinds.Toast);
+            foreach (var n in notifications)
+            {
+                try
+                {
+                    listener.RemoveNotification(n.Id);
+                }
+                catch { }
+            }
         }
         catch { }
     }

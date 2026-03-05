@@ -325,7 +325,7 @@
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                             <Border CornerRadius="4" Margin="0,0,8,0"
                                     Background="Transparent" Padding="8,3"
-                                    Cursor="Hand" MouseLeftButtonUp="ClearAllNotifications_Click">
+                                    Cursor="Hand" PreviewMouseLeftButtonDown="ClearAllNotifications_Click">
                                 <TextBlock Text="クリア" FontSize="10"
                                            Foreground="#88ffffff"/>
                             </Border>
@@ -480,7 +480,20 @@
                             </DockPanel>
                             <Slider x:Name="CC_VolumeSlider" Style="{StaticResource MacSlider}"
                                     VerticalAlignment="Center"
-                                    ValueChanged="CC_VolumeSlider_ValueChanged"/>
+                                    ValueChanged="CC_VolumeSlider_ValueChanged"
+                                    Margin="0,0,0,6"/>
+                            <!-- オーディオデバイスリストを展開 -->
+                            <Border Cursor="Hand" MouseLeftButtonUp="ToggleAudioDevices_Click" Background="Transparent">
+                                <DockPanel Margin="0,4,0,0">
+                                    <TextBlock x:Name="AudioDevicesToggleIcon" Text="&#xE70D;" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="10" Foreground="#55ffffff" VerticalAlignment="Center" Margin="0,0,6,0" DockPanel.Dock="Left"/>
+                                    <TextBlock x:Name="CurrentAudioDeviceName" Text="出力デバイス" FontSize="10"
+                                               Foreground="#88ffffff" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                </DockPanel>
+                            </Border>
+                            <StackPanel x:Name="AudioDevicesList" Visibility="Collapsed" Margin="0,6,0,0">
+                                <!-- コード側から ItemsControl で動的生成するか、Children に Add する -->
+                            </StackPanel>
                         </StackPanel>
                     </Border>
 

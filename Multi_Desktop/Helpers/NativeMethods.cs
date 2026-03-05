@@ -258,7 +258,7 @@ internal static partial class NativeMethods
 
     // ─── WorkArea 関連 ──────────────────────────────────
     [StructLayout(LayoutKind.Sequential)]
-    private struct RECT
+    public struct RECT
     {
         public int Left, Top, Right, Bottom;
     }
@@ -268,6 +268,66 @@ internal static partial class NativeMethods
 
     private const int SM_CXSCREEN = 0;
     private const int SM_CYSCREEN = 1;
+
+    // ─── モニターとDPI ──────────────────────────────────
+    [DllImport("user32.dll")]
+    public static extern IntPtr MonitorFromPoint(System.Drawing.Point pt, uint dwFlags);
+
+    public const uint MONITOR_DEFAULTTONULL = 0;
+    public const uint MONITOR_DEFAULTTOPRIMARY = 1;
+    public const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [DllImport("shcore.dll")]
+    public static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+    [DllImport("user32.dll")]
+    public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    /// <summary>
+    /// 指定された物理座標を含むモニターの論理（WPF）座標の矩形を取得する
+    /// スケーリングやマルチモニターのオフセットによるWPF側の座標ズレを補正する
+    /// </summary>
+    public static System.Windows.Rect GetLogicalScreenBounds(System.Windows.Point physicalPoint)
+    {
+        var pt = new System.Drawing.Point((int)physicalPoint.X, (int)physicalPoint.Y);
+        var hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+
+        if (hMonitor != IntPtr.Zero)
+        {
+            var mi = new MONITORINFO();
+            mi.cbSize = Marshal.SizeOf<MONITORINFO>();
+            if (GetMonitorInfo(hMonitor, ref mi))
+            {
+                // DPI を取得
+                uint dpiX = 96;
+                uint dpiY = 96;
+                GetDpiForMonitor(hMonitor, 0 /* MDT_EFFECTIVE_DPI */, out dpiX, out dpiY);
+
+                double scaleX = dpiX / 96.0;
+                double scaleY = dpiY / 96.0;
+
+                return new System.Windows.Rect(
+                    mi.rcMonitor.Left / scaleX,
+                    mi.rcMonitor.Top / scaleY,
+                    (mi.rcMonitor.Right - mi.rcMonitor.Left) / scaleX,
+                    (mi.rcMonitor.Bottom - mi.rcMonitor.Top) / scaleY
+                );
+            }
+        }
+        
+        // フォールバック
+        var screen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point((int)physicalPoint.X, (int)physicalPoint.Y));
+        return new System.Windows.Rect(screen.Bounds.X, screen.Bounds.Y, screen.Bounds.Width, screen.Bounds.Height);
+    }
 
     // ─── ウィンドウ列挙 ────────────────────────────────
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
