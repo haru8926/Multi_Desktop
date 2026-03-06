@@ -63,6 +63,9 @@ internal static class VolumeHelper
         public IntPtr offset;
     }
 
+    [DllImport("ole32.dll")]
+    private static extern int PropVariantClear(ref PROPVARIANT pvar);
+
     [ComImport, Guid("0BD7A1BE-7A1A-44DB-8397-CC5392387B5E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IMMDeviceCollection
     {
@@ -218,10 +221,16 @@ internal static class VolumeHelper
                 {
                     device.OpenPropertyStore(0 /* STGM_READ */, out var propStore);
                     propStore.GetValue(ref PKEY_Device_FriendlyName, out var propVar);
-                    if (propVar.pwszVal != IntPtr.Zero)
+                    try
                     {
-                        name = Marshal.PtrToStringUni(propVar.pwszVal) ?? name;
-                        // propVar.pwszVal のメモリ解放が必要ですが簡略化
+                        if (propVar.pwszVal != IntPtr.Zero)
+                        {
+                            name = Marshal.PtrToStringUni(propVar.pwszVal) ?? name;
+                        }
+                    }
+                    finally
+                    {
+                        PropVariantClear(ref propVar);
                     }
                     Marshal.ReleaseComObject(propStore);
                 }
