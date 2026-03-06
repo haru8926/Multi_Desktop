@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Multi_Desktop.Services;
 
 namespace Multi_Desktop;
 
@@ -7,9 +8,18 @@ namespace Multi_Desktop;
 /// </summary>
 public partial class App : System.Windows.Application
 {
+    public static MainPluginHost PluginHost { get; } = new MainPluginHost();
+    public static PluginManager PluginManager { get; } = new PluginManager(PluginHost);
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        PluginManager.LoadPlugins();
+
+        // UIPI（ユーザーインターフェイス特権の分離）をバイパスして
+        // 管理者権限でもD&Dできるようにする
+        Helpers.NativeMethods.AllowDragAndDropFromLowerPrivilege();
 
         // 未処理例外のハンドリング — タスクバーを必ず復元
         DispatcherUnhandledException += (s, args) =>
@@ -40,6 +50,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        PluginManager.ShutdownPlugins();
         // アプリ終了時にタスクバーを必ず復元
         try { Helpers.NativeMethods.ShowTaskbar(); } catch { }
         // COM オブジェクトを解放

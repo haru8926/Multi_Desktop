@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Multi_Desktop/Multi_Desktop.csproj" />
+  <Project Path="Multi_Desktop.PluginApi/Multi_Desktop.PluginApi.csproj" />
 </Solution>

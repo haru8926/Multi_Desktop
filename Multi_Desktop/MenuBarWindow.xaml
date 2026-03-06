@@ -135,7 +135,7 @@
             <Border BorderBrush="#12ffffff" BorderThickness="0,0,0,0.6">
                 <DockPanel Margin="6,0">
                     <!-- ========== 左側 ========== -->
-                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal"
+                    <StackPanel x:Name="LeftMenuBarItems" DockPanel.Dock="Left" Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <!-- Windowsロゴ -->
                         <Border x:Name="WindowsLogoButton"
@@ -172,6 +172,18 @@
                     <!-- ========== 右側 ========== -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
                                 VerticalAlignment="Center">
+
+                        <!-- 一時保存トレイ -->
+                        <Border x:Name="TempStorageTray"
+                                Style="{StaticResource MenuBarButton}" Padding="5,3" Margin="0,0,4,0"
+                                MouseLeftButtonUp="TempStorageTray_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave"
+                                ToolTip="一時保存トレイ">
+                            <TextBlock x:Name="TempStorageIcon" Text="&#xE8F1;"
+                                       FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                       Foreground="#88ffffff" VerticalAlignment="Center"/>
+                        </Border>
 
                         <!-- コントロールセンター -->
                         <Border x:Name="ControlCenterButton"
@@ -570,6 +582,76 @@
                             </DockPanel>
                         </Border>
                     </UniformGrid>
+
+                    <!-- プラグインUI用コンテナ -->
+                    <StackPanel x:Name="PluginTrayContainer" Margin="0,6,0,0"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- ========== 一時保存トレイポップアップ ========== -->
+        <Popup x:Name="TempStoragePopup" Placement="Bottom"
+               PlacementTarget="{Binding ElementName=TempStorageTray}"
+               StaysOpen="False" AllowsTransparency="True"
+               PopupAnimation="Fade" HorizontalOffset="-100">
+            <Border Style="{StaticResource MacPopup}" MinWidth="240" MaxWidth="320" Padding="14">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Foreground="#88ffffff"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" DockPanel.Dock="Left"/>
+                        <TextBlock Text="一時保存トレイ" FontSize="12" FontWeight="SemiBold"
+                                   Foreground="White" VerticalAlignment="Center"/>
+                    </DockPanel>
+
+                    <!-- コンテンツプレビュー領域 -->
+                    <Border Background="#15ffffff" CornerRadius="8" Padding="10" Margin="0,0,0,10" MinHeight="60">
+                        <Grid>
+                            <TextBlock x:Name="TempStorageEmptyText" Text="保存されていません"
+                                       FontSize="11" Foreground="#55ffffff"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TempStorageTextPreview" Text=""
+                                       FontSize="11" Foreground="#ccffffff"
+                                       TextWrapping="Wrap" MaxHeight="100" TextTrimming="CharacterEllipsis"
+                                       Visibility="Collapsed"/>
+                            <Image x:Name="TempStorageImagePreview" MaxHeight="100" Stretch="Uniform"
+                                   Visibility="Collapsed"/>
+                            <ListBox x:Name="TempStorageFileList" Background="Transparent" BorderThickness="0"
+                                     Foreground="#ccffffff" FontSize="10" MaxHeight="100"
+                                     Visibility="Collapsed">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Focusable" Value="False"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- アクションボタン -->
+                    <UniformGrid Columns="2" Rows="1" Margin="0,0,0,6">
+                        <Border Style="{StaticResource CCTile}" Margin="0,0,3,0"
+                                MouseLeftButtonUp="TempStorageSaveFromClipboard_Click" ToolTip="現在のクリップボードの内容をここに保存します">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE8CD;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#88BBEE" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="保存する" FontSize="10" Foreground="White" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CCTile}" Margin="3,0,0,0"
+                                MouseLeftButtonUp="TempStorageCopyToClipboard_Click" ToolTip="このトレイの内容をクリップボードにコピーします">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#66DD88" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="コピーする" FontSize="10" Foreground="White" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                    <Border Style="{StaticResource CCTile}" Background="#22ff4444"
+                            MouseLeftButtonUp="TempStorageClear_Click">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="#ffaaaa" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="クリア" FontSize="11" Foreground="#ffdddd" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </Border>
         </Popup>

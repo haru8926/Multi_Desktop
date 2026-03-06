@@ -18,8 +18,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Multi_Desktop.PluginApi\Multi_Desktop.PluginApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\**\*.png" />
     <Resource Include="Assets\**\*.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Plugins\FFmpegPlugin\Multi_Desktop.FFmpegPlugin.deps.json" />
+    <None Remove="Plugins\FFmpegPlugin\Multi_Desktop.FFmpegPlugin.dll" />
+    <None Remove="Plugins\FFmpegPlugin\Multi_Desktop.FFmpegPlugin.pdb" />
+    <None Remove="Plugins\SamplePlugin\Multi_Desktop.SamplePlugin.deps.json" />
+    <None Remove="Plugins\SamplePlugin\Multi_Desktop.SamplePlugin.dll" />
+    <None Remove="Plugins\SamplePlugin\Multi_Desktop.SamplePlugin.pdb" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +49,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Help_Calendar.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\FFmpegPlugin\Multi_Desktop.FFmpegPlugin.deps.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\FFmpegPlugin\Multi_Desktop.FFmpegPlugin.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\FFmpegPlugin\Multi_Desktop.FFmpegPlugin.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\SamplePlugin\Multi_Desktop.SamplePlugin.deps.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\SamplePlugin\Multi_Desktop.SamplePlugin.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Plugins\SamplePlugin\Multi_Desktop.SamplePlugin.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

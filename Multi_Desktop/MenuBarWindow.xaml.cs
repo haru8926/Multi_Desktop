@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -31,6 +32,11 @@ public partial class MenuBarWindow : Window
     private MusicPlayerWindow? _musicPlayerWindow;
     private MusicServiceSettings _musicSettings = new();
 
+    // ─── 一時保存トレイのデータ ──────────────────────────
+    private object? _tempStorageData;
+    private bool _isTempStorageDragging;
+    private System.Windows.Point _tempStorageDragStartPoint;
+
     // 対象ディスプレイ（物理座標）
     private readonly System.Windows.Forms.Screen _targetScreen;
 
@@ -62,6 +68,60 @@ public partial class MenuBarWindow : Window
         StartTopmostTimer();
         UpdateNetworkStatus();
         UpdateBatteryStatus();
+
+        // ── プラグインUIの登録 ──
+        if (_targetScreen.Primary)
+        {
+            App.PluginHost.OnMenuItemAdded += InjectMenuItem;
+            App.PluginHost.OnTrayPopupViewAdded += InjectTrayPopupView;
+            
+            // 既にロードされたプラグインUIを注入
+            App.PluginHost.InjectBufferedUI(this);
+        }
+    }
+
+    public void InjectMenuItem(string header, Action? action)
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            var border = new Border
+            {
+                Style = (Style)FindResource("MenuBarButton"),
+                Padding = new System.Windows.Thickness(7, 3, 7, 3),
+                Margin = new System.Windows.Thickness(4, 0, 0, 0)
+            };
+            border.MouseLeftButtonUp += (s, ev) => action?.Invoke();
+            border.MouseEnter += MenuBarItem_MouseEnter;
+            border.MouseLeave += MenuBarItem_MouseLeave;
+
+            var text = new TextBlock
+            {
+                Text = header,
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI Variable Display, Segoe UI"),
+                FontSize = 12.5,
+                Foreground = System.Windows.Media.Brushes.White,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            border.Child = text;
+
+            LeftMenuBarItems.Children.Add(border);
+        }, DispatcherPriority.Normal);
+    }
+
+    public void InjectTrayPopupView(UIElement view)
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            if (view is FrameworkElement fe)
+            {
+                if (fe.Parent is System.Windows.Controls.Panel p) p.Children.Remove(view);
+                else if (fe.Parent is ContentControl c) c.Content = null;
+                else if (fe.Parent is Border b) b.Child = null;
+            }
+
+            if (!PluginTrayContainer.Children.Contains(view))
+                PluginTrayContainer.Children.Add(view);
+        }, DispatcherPriority.Normal);
     }
 
     // ─── WndProc（自己リポジショニング防止）──────────
@@ -900,6 +960,109 @@ public partial class MenuBarWindow : Window
     {
         CalendarPopup.IsOpen = false;
         NativeMethods.OpenNotificationCenter();
+    }
+
+    // ─── 一時保存トレイ (Popup方式) ──────────────────────────────
+    private void TempStorageTray_Click(object sender, MouseButtonEventArgs e)
+    {
+        TempStoragePopup.IsOpen = !TempStoragePopup.IsOpen;
+        if (TempStoragePopup.IsOpen)
+        {
+            UpdateTempStoragePreview();
+        }
+    }
+
+    private void TempStorageSaveFromClipboard_Click(object sender, MouseButtonEventArgs e)
+    {
+        try
+        {
+            if (System.Windows.Clipboard.ContainsFileDropList())
+            {
+                var files = System.Windows.Clipboard.GetFileDropList();
+                string[] fileArray = new string[files.Count];
+                files.CopyTo(fileArray, 0);
+                _tempStorageData = fileArray;
+                UpdateTempStoragePreview();
+            }
+            else if (System.Windows.Clipboard.ContainsImage())
+            {
+                _tempStorageData = System.Windows.Clipboard.GetImage();
+                UpdateTempStoragePreview();
+            }
+            else if (System.Windows.Clipboard.ContainsText())
+            {
+                _tempStorageData = System.Windows.Clipboard.GetText();
+                UpdateTempStoragePreview();
+            }
+        }
+        catch { }
+    }
+
+    private void TempStorageCopyToClipboard_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (_tempStorageData == null) return;
+        try
+        {
+            if (_tempStorageData is string[] files)
+            {
+                var dataObj = new System.Windows.DataObject(System.Windows.DataFormats.FileDrop, files);
+                System.Windows.Clipboard.SetDataObject(dataObj, true);
+            }
+            else if (_tempStorageData is string text)
+            {
+                System.Windows.Clipboard.SetText(text);
+            }
+            else if (_tempStorageData is System.Windows.Interop.InteropBitmap interopBitmap)
+            {
+                System.Windows.Clipboard.SetImage(interopBitmap);
+            }
+            else if (_tempStorageData is System.Windows.Media.Imaging.BitmapSource bitmap)
+            {
+                System.Windows.Clipboard.SetImage(bitmap);
+            }
+            
+            TempStoragePopup.IsOpen = false;
+        }
+        catch { }
+    }
+
+    private void TempStorageClear_Click(object sender, MouseButtonEventArgs e)
+    {
+        _tempStorageData = null;
+        UpdateTempStoragePreview();
+    }
+
+    private void UpdateTempStoragePreview()
+    {
+        TempStorageEmptyText.Visibility = Visibility.Collapsed;
+        TempStorageTextPreview.Visibility = Visibility.Collapsed;
+        TempStorageImagePreview.Visibility = Visibility.Collapsed;
+        TempStorageFileList.Visibility = Visibility.Collapsed;
+
+        if (_tempStorageData == null)
+        {
+            TempStorageEmptyText.Visibility = Visibility.Visible;
+            TempStorageIcon.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x88, 0xFF, 0xFF, 0xFF));
+            return;
+        }
+
+        TempStorageIcon.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+
+        if (_tempStorageData is string[] files)
+        {
+            TempStorageFileList.Visibility = Visibility.Visible;
+            TempStorageFileList.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+        }
+        else if (_tempStorageData is string text)
+        {
+            TempStorageTextPreview.Visibility = Visibility.Visible;
+            TempStorageTextPreview.Text = text;
+        }
+        else if (_tempStorageData is System.Windows.Media.ImageSource image)
+        {
+            TempStorageImagePreview.Visibility = Visibility.Visible;
+            TempStorageImagePreview.Source = image;
+        }
     }
 
     // ─── クリーンアップ ──────────────────────────────

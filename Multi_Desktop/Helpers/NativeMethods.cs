@@ -667,4 +667,28 @@ internal static partial class NativeMethods
         keybd_event(VK_N, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
         keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
     }
+
+    // ─── ドラッグアンドドロップ (UIPIバイパス) ──────────────────────────
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
+
+    private const uint MSGFLT_ADD = 1;
+    private const uint WM_DROPFILES = 0x0233;
+    private const uint WM_COPYDATA = 0x004A;
+    private const uint WM_COPYGLOBALDATA = 0x0049;
+
+    /// <summary>
+    /// 管理者権限実行時でも、通常の権限で動作するエクスプローラー等からのドラッグアンドドロップを許可する
+    /// </summary>
+    public static void AllowDragAndDropFromLowerPrivilege()
+    {
+        try
+        {
+            ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
+            ChangeWindowMessageFilter(WM_COPYDATA, MSGFLT_ADD);
+            ChangeWindowMessageFilter(WM_COPYGLOBALDATA, MSGFLT_ADD);
+        }
+        catch { }
+    }
 }
