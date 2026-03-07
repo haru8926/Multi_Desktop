@@ -85,12 +85,11 @@ namespace Multi_Desktop.FFmpegPlugin
                 _dropArea.BorderThickness = new Thickness(2);
                 _dropArea.CornerRadius = new CornerRadius(8);
                 _dropArea.Height = 100;
-                _dropArea.AllowDrop = true;
                 _dropArea.Cursor = System.Windows.Input.Cursors.Hand;
                 
                 var dropLabel = new TextBlock
                 {
-                    Text = "ここに動画(MP4等)をドロップ\nまたはクリックして選択",
+                    Text = "ここをクリックして動画(MP4等)を\n選択してください",
                     Foreground = Brushes.White,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
@@ -98,17 +97,6 @@ namespace Multi_Desktop.FFmpegPlugin
                     FontSize = 12
                 };
                 _dropArea.Child = dropLabel;
-                
-                // Drag & Drop events
-                _dropArea.Drop += OnFileDrop;
-                _dropArea.DragEnter += (s, e) =>
-                {
-                    if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                        e.Effects = DragDropEffects.Copy;
-                    else
-                        e.Effects = DragDropEffects.None;
-                    e.Handled = true;
-                };
 
                 // Click event for file dialog
                 _dropArea.MouseLeftButtonUp += OnDropAreaClick;
@@ -189,7 +177,7 @@ namespace Multi_Desktop.FFmpegPlugin
         {
             if (File.Exists(_ffmpegPath))
             {
-                UpdateStatus("FFmpeg 準備完了。ドロップできます。");
+                UpdateStatus("FFmpeg 準備完了。クリックしてファイルを選択できます。");
                 return;
             }
 
@@ -226,7 +214,7 @@ namespace Multi_Desktop.FFmpegPlugin
 
                 if (File.Exists(zipPath)) File.Delete(zipPath);
 
-                UpdateStatus("FFmpeg 準備完了。ドロップできます。");
+                UpdateStatus("FFmpeg 準備完了。クリックしてファイルを選択できます。");
             }
             catch (Exception ex)
             {
@@ -273,19 +261,7 @@ namespace Multi_Desktop.FFmpegPlugin
             }
         }
 
-        private void OnFileDrop(object sender, DragEventArgs e)
-        {
-            if (!File.Exists(_ffmpegPath))
-            {
-                MessageBox.Show("FFmpegのダウンロードが完了するまでお待ちください。");
-                return;
-            }
 
-            if (e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
-            {
-                ProcessSelectedFile(files[0]);
-            }
-        }
 
         private async void ExecuteFFmpeg(ConvertAction action)
         {

@@ -90,6 +90,13 @@ public partial class MainWindow : Window
 
         // 現在のモードに応じてDockを表示
         ApplyDockForCurrentMode();
+
+        // AI アシスタント設定をメニューバーに反映
+        foreach (var mb in _menuBarWindows)
+        {
+            mb.UpdateAiApiKey(_settings.GeminiApiKey);
+            mb.UpdateQuickAiService(_settings.QuickAiService);
+        }
     }
 
     // ─── Dock管理 ─────────────────────────────────────
@@ -154,6 +161,13 @@ public partial class MainWindow : Window
         // ミュージックサービス設定を反映
         foreach (var mb in _menuBarWindows)
             mb.UpdateMusicSettings(_settings.MusicSettings);
+
+        // AI アシスタント設定をメニューバーに反映
+        foreach (var mb in _menuBarWindows)
+        {
+            mb.UpdateAiApiKey(_settings.GeminiApiKey);
+            mb.UpdateQuickAiService(_settings.QuickAiService);
+        }
     }
 
     /// <summary>Dockを非表示にし、Windowsタスクバーを復元する</summary>
@@ -299,6 +313,13 @@ public partial class MainWindow : Window
             // ミュージックサービス設定をメニューバーに反映
             foreach (var mb in _menuBarWindows)
                 mb.UpdateMusicSettings(_settings.MusicSettings);
+
+            // AI アシスタント設定をメニューバーに反映
+            foreach (var mb in _menuBarWindows)
+            {
+                mb.UpdateAiApiKey(_settings.GeminiApiKey);
+                mb.UpdateQuickAiService(_settings.QuickAiService);
+            }
         }
     }
 

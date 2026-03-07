@@ -32,6 +32,12 @@ public class AppSettings
     /// <summary>音楽ストリーミングサービス設定</summary>
     public MusicServiceSettings MusicSettings { get; set; } = new();
 
+    /// <summary>Gemini API キー (AI 操作用)</summary>
+    public string GeminiApiKey { get; set; } = string.Empty;
+
+    /// <summary>Quick AI (Web) で使用するサービス</summary>
+    public string QuickAiService { get; set; } = "ChatGPT";
+
     /// <summary>指定モードのタスクバー設定を取得</summary>
     public TaskbarSettings GetTaskbarSettings(DesktopMode mode) => mode switch
     {

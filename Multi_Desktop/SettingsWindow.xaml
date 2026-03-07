@@ -208,6 +208,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- ヘッダー -->
@@ -538,8 +539,43 @@
                 </StackPanel>
             </Border>
 
+            <!-- 🤖 AI アシスタント設定 -->
+            <Border Grid.Row="5" Background="#161e38" CornerRadius="12" Padding="16" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="✨ &amp; 🤖 AI アシスタント機能" FontSize="15" FontWeight="Bold" Foreground="#60BFFF" Margin="0,0,0,12"/>
+
+                    <!-- Quick AI の設定 -->
+                    <TextBlock Text="✨ Quick AI (Web)" FontSize="13" FontWeight="SemiBold" Foreground="#aaddff" Margin="0,0,0,8"/>
+                    <TextBlock Text="メニューバーの ✨ アイコンから直接Web上のAIサービスを開きます"
+                               FontSize="11" Foreground="#6688aa" Margin="0,0,0,6"/>
+                    <TextBlock Text="使用するサービス" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox x:Name="QuickAiServiceComboBox" Margin="0,0,0,20" Width="200" HorizontalAlignment="Left">
+                        <ComboBoxItem Content="ChatGPT"/>
+                        <ComboBoxItem Content="Gemini"/>
+                        <ComboBoxItem Content="Claude"/>
+                    </ComboBox>
+
+                    <!-- AI 操作の設定 -->
+                    <TextBlock Text="🤖 AI 操作 (アシスタント)" FontSize="13" FontWeight="SemiBold" Foreground="#aaddff" Margin="0,0,0,8"/>
+                    <TextBlock Text="Gemini API キーを入力すると、メニューバーの 🤖 アイコンからAIにPCの操作を手伝ってもらえます"
+                               FontSize="11" Foreground="#6688aa" Margin="0,0,0,8"/>
+
+                    <TextBlock Text="Gemini API キー" Style="{StaticResource FieldLabel}"/>
+                    <PasswordBox x:Name="GeminiApiKeyBox"
+                                 FontSize="12"
+                                 Foreground="#dde0ff"
+                                 Background="#0f0f23"
+                                 BorderBrush="#333355"
+                                 BorderThickness="1"
+                                 Padding="8,6"
+                                 PasswordChar="●"/>
+                    <TextBlock Text="Google AI Studio で取得した API キーを入力してください"
+                               FontSize="10" Foreground="#556688" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
             <!-- 保存/キャンセルボタン -->
-            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
                 <Button Content="キャンセル"
                         Background="#333355"
                         Style="{StaticResource ActionButton}"

@@ -78,44 +78,54 @@ public class RunningAppService : IDisposable
     }
 
     /// <summary>アプリ一覧を最新に更新する（差分がない場合はスキップ）</summary>
-    public void Refresh()
+    public async void Refresh()
     {
-        var runningWindows = GetVisibleWindows();
-        var newItems = new List<DockAppItem>();
+        // 1. ピン留めされたリストのコピーを作成（別スレッドで安全に反復可能にする）
+        var pinnedAppsList = _pinnedApps.ToList();
 
-        // 1. ピン留めされたアプリを先に追加
-        foreach (var pinPath in _pinnedApps)
+        // 別スレッドで重いウィンドウ列挙とアイコン取得を実行
+        var newItems = await Task.Run(() =>
         {
-            if (string.IsNullOrWhiteSpace(pinPath)) continue;
+            var runningWindows = GetVisibleWindows();
+            var items = new List<DockAppItem>();
 
-            var running = runningWindows.FirstOrDefault(w =>
-                string.Equals(w.ExePath, pinPath, StringComparison.OrdinalIgnoreCase));
+            // 1. ピン留めされたアプリを先に追加
+            foreach (var pinPath in pinnedAppsList)
+            {
+                if (string.IsNullOrWhiteSpace(pinPath)) continue;
 
-            if (running != null)
-            {
-                running.IsPinned = true;
-                newItems.Add(running);
-                runningWindows.Remove(running);
-            }
-            else
-            {
-                // ピン留めされているが未起動
-                newItems.Add(new DockAppItem
+                var running = runningWindows.FirstOrDefault(w =>
+                    string.Equals(w.ExePath, pinPath, StringComparison.OrdinalIgnoreCase));
+
+                if (running != null)
                 {
-                    Name = Path.GetFileNameWithoutExtension(pinPath),
-                    ExePath = pinPath,
-                    Icon = GetCachedIcon(pinPath),
-                    IsRunning = false,
-                    IsPinned = true
-                });
+                    running.IsPinned = true;
+                    items.Add(running);
+                    runningWindows.Remove(running);
+                }
+                else
+                {
+                    // ピン留めされているが未起動
+                    // GetCachedIcon もこのTask内で実行されるため同期問題なし
+                    items.Add(new DockAppItem
+                    {
+                        Name = Path.GetFileNameWithoutExtension(pinPath),
+                        ExePath = pinPath,
+                        Icon = GetCachedIcon(pinPath),
+                        IsRunning = false,
+                        IsPinned = true
+                    });
+                }
             }
-        }
 
-        // 2. 実行中だがピン留めされていないアプリを追加
-        foreach (var item in runningWindows)
-        {
-            newItems.Add(item);
-        }
+            // 2. 実行中だがピン留めされていないアプリを追加
+            foreach (var item in runningWindows)
+            {
+                items.Add(item);
+            }
+            
+            return items;
+        });
 
         // 3. 差分検出: 変更がなければ UI更新をスキップ
         var newSnapshot = newItems.Select(i => (i.ExePath, i.IsRunning, i.IsPinned, i.WindowHandle)).ToList();
@@ -125,7 +135,7 @@ public class RunningAppService : IDisposable
         }
         _lastSnapshot = newSnapshot;
 
-        // 4. ObservableCollection の更新
+        // 4. ObservableCollection の更新 (メインスレッドへ)
         System.Windows.Application.Current?.Dispatcher.Invoke(() =>
         {
             DockItems.Clear();

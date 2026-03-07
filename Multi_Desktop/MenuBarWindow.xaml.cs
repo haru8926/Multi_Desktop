@@ -31,6 +31,10 @@ public partial class MenuBarWindow : Window
     private bool _suppressVolumeEvent;
     private MusicPlayerWindow? _musicPlayerWindow;
     private MusicServiceSettings _musicSettings = new();
+    private AiOperationWindow? _aiOperationWindow;
+    private QuickAiPanelWindow? _quickAiWindow;
+    private string _geminiApiKey = string.Empty;
+    private string _quickAiService = "ChatGPT";
 
     // ─── 一時保存トレイのデータ ──────────────────────────
     private object? _tempStorageData;
@@ -104,7 +108,8 @@ public partial class MenuBarWindow : Window
             };
             border.Child = text;
 
-            LeftMenuBarItems.Children.Add(border);
+            PluginMenuItems.Children.Add(border);
+            PluginSeparator.Visibility = Visibility.Visible;
         }, DispatcherPriority.Normal);
     }
 
@@ -722,7 +727,10 @@ public partial class MenuBarWindow : Window
                     });
                     CalendarPopup.IsOpen = false;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"通知のアプリを開けませんでした。\nエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             };
         }
 
@@ -782,8 +790,10 @@ public partial class MenuBarWindow : Window
                 UseShellExecute = true
             });
         }
-        catch { }
-        ControlCenterPopup.IsOpen = false;
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"タスクマネージャーを開けませんでした。\nエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     private void CC_Settings_Click(object sender, MouseButtonEventArgs e)
@@ -871,6 +881,126 @@ public partial class MenuBarWindow : Window
         _musicPlayerWindow?.UpdateSettings(settings);
     }
 
+    // ─── AI 操作パネル ──────────────────────────────
+    private void AiOperation_Click(object sender, MouseButtonEventArgs e)
+    {
+        if (_aiOperationWindow == null || !_aiOperationWindow.IsLoaded)
+        {
+            _aiOperationWindow = new AiOperationWindow(_geminiApiKey);
+            _aiOperationWindow.OnPanelHidden += (s, ev) =>
+            {
+                // 最小化時の処理（必要に応じて）
+            };
+            _aiOperationWindow.Closed += (s, _) =>
+            {
+                _aiOperationWindow = null;
+            };
+        }
+
+        // ボタンの位置を基準にフローティング表示位置を計算
+        var aiButton = AiOperationButton;
+        double left = Left;
+        double top = 28;
+        try
+        {
+            var pt = aiButton.PointToScreen(new System.Windows.Point(0, 0));
+            var source = PresentationSource.FromVisual(aiButton);
+            if (source?.CompositionTarget != null)
+            {
+                double dpiX = source.CompositionTarget.TransformToDevice.M11;
+                double dpiY = source.CompositionTarget.TransformToDevice.M22;
+                left = pt.X / dpiX - 200;
+                top = pt.Y / dpiY + 28;
+            }
+        }
+        catch { }
+
+        if (_aiOperationWindow.IsVisible)
+        {
+            _aiOperationWindow.Hide();
+        }
+        else
+        {
+            _aiOperationWindow.ShowAt(left, top);
+        }
+    }
+
+    // ─── Quick AI パネル (Web) ─────────────────────────
+    private void QuickAi_Click(object sender, MouseButtonEventArgs e)
+    {
+        var url = _quickAiService switch
+        {
+            "Gemini" => "https://gemini.google.com",
+            "Claude" => "https://claude.ai",
+            _ => "https://chatgpt.com"
+        };
+
+        if (_quickAiWindow == null || !_quickAiWindow.IsLoaded)
+        {
+            _quickAiWindow = new QuickAiPanelWindow(url, _quickAiService);
+            _quickAiWindow.OnPanelHidden += (s, ev) =>
+            {
+                // 最小化時の処理
+            };
+            _quickAiWindow.Closed += (s, _) =>
+            {
+                _quickAiWindow = null;
+            };
+        }
+
+        // ボタンの位置を基準にフローティング表示位置を計算
+        var aiButton = QuickAiButton;
+        double left = Left;
+        double top = 28;
+        try
+        {
+            var pt = aiButton.PointToScreen(new System.Windows.Point(0, 0));
+            var source = PresentationSource.FromVisual(aiButton);
+            if (source?.CompositionTarget != null)
+            {
+                double dpiX = source.CompositionTarget.TransformToDevice.M11;
+                double dpiY = source.CompositionTarget.TransformToDevice.M22;
+                left = pt.X / dpiX - 200;
+                top = pt.Y / dpiY + 28;
+            }
+        }
+        catch { }
+
+        if (_quickAiWindow.IsVisible)
+        {
+            _quickAiWindow.Hide();
+        }
+        else
+        {
+            _quickAiWindow.UpdateService(url, _quickAiService);
+            _quickAiWindow.ShowAt(left, top);
+        }
+    }
+
+    /// <summary>
+    /// Gemini API キーを更新（MainWindowから呼び出し）
+    /// </summary>
+    public void UpdateAiApiKey(string apiKey)
+    {
+        _geminiApiKey = apiKey;
+        _aiOperationWindow?.UpdateApiKey(apiKey);
+    }
+
+    /// <summary>
+    /// Quick AI サービスを更新（MainWindowから呼び出し）
+    /// </summary>
+    public void UpdateQuickAiService(string serviceName)
+    {
+        _quickAiService = serviceName;
+        var url = _quickAiService switch
+        {
+            "Gemini" => "https://gemini.google.com",
+            "Claude" => "https://claude.ai",
+            _ => "https://chatgpt.com"
+        };
+        _quickAiWindow?.UpdateService(url, _quickAiService);
+    }
+
     // ─── ヘルパー ──────────────────────────────────────────
     private static void OpenWindowsSettings(string uri)
     {
@@ -878,7 +1008,10 @@ public partial class MenuBarWindow : Window
         {
             Process.Start(new ProcessStartInfo { FileName = uri, UseShellExecute = true });
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"設定を開けませんでした。\nエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     // ─── オーディオデバイス切り替え ─────────────────────────────────
@@ -1073,8 +1206,15 @@ public partial class MenuBarWindow : Window
         _activeWindowTimer?.Stop();
         _statusTimer?.Stop();
         _hwndSource?.RemoveHook(WndProc);
+        
+        // メモリリーク防止のためグローバルイベントから登録解除
+        App.PluginHost.OnMenuItemAdded -= InjectMenuItem;
+        App.PluginHost.OnTrayPopupViewAdded -= InjectTrayPopupView;
+
         UnregisterAsAppBar();
         try { _musicPlayerWindow?.Close(); } catch { }
+        try { _aiOperationWindow?.Close(); } catch { }
+        try { _quickAiWindow?.Close(); } catch { }
     }
 
     protected override void OnClosed(EventArgs e)

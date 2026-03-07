@@ -52,6 +52,18 @@ public partial class SettingsWindow : Window
             SubIconSizeSlider, SubIconSizeLabel,
             SubMagSlider, SubMagLabel,
             SubPinnedAppsList, _subPinnedApps);
+
+        // AI アシスタント設定をUIに反映
+        GeminiApiKeyBox.Password = settings.GeminiApiKey ?? string.Empty;
+        
+        foreach (ComboBoxItem item in QuickAiServiceComboBox.Items)
+        {
+            if (item.Content.ToString() == settings.QuickAiService)
+            {
+                QuickAiServiceComboBox.SelectedItem = item;
+                break;
+            }
+        }
     }
 
     // ─── タスクバー設定のUI反映 ──────────────────────
@@ -261,6 +273,13 @@ public partial class SettingsWindow : Window
         UpdatedSettings.MusicSettings.IsYouTubeEnabled = YouTubeToggle.IsChecked == true;
         UpdatedSettings.MusicSettings.IsAmazonMusicEnabled = AmazonMusicToggle.IsChecked == true;
         UpdatedSettings.MusicSettings.IsSpotifyEnabled = SpotifyToggle.IsChecked == true;
+
+        // AI アシスタント設定を保存
+        UpdatedSettings.GeminiApiKey = GeminiApiKeyBox.Password;
+        if (QuickAiServiceComboBox.SelectedItem is ComboBoxItem selectedItem)
+        {
+            UpdatedSettings.QuickAiService = selectedItem.Content.ToString() ?? "ChatGPT";
+        }
 
         // タスクバー設定を保存
         SaveTaskbarSettings(UpdatedSettings.MainTaskbarSettings,

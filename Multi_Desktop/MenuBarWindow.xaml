@@ -167,6 +167,13 @@
                                    Foreground="White" VerticalAlignment="Center"
                                    Margin="6,0,0,0" MaxWidth="450"
                                    TextTrimming="CharacterEllipsis"/>
+
+                        <!-- プラグイン境界線 -->
+                        <Border x:Name="PluginSeparator" Width="1" Height="12" Background="#22ffffff"
+                                Margin="8,0,4,0" VerticalAlignment="Center" CornerRadius="0.5" Visibility="Collapsed"/>
+
+                        <!-- プラグインアイテム -->
+                        <StackPanel x:Name="PluginMenuItems" Orientation="Horizontal" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- ========== 右側 ========== -->
@@ -183,6 +190,30 @@
                             <TextBlock x:Name="TempStorageIcon" Text="&#xE8F1;"
                                        FontFamily="Segoe MDL2 Assets" FontSize="13"
                                        Foreground="#88ffffff" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <!-- AI 操作 -->
+                        <Border x:Name="AiOperationButton"
+                                Style="{StaticResource MenuBarButton}" Padding="5,3" Margin="0,0,4,0"
+                                MouseLeftButtonUp="AiOperation_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave"
+                                ToolTip="AI 操作">
+                            <TextBlock Text="&#xE99A;"
+                                       FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                       Foreground="#FFCC66" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <!-- Quick AI (Web) -->
+                        <Border x:Name="QuickAiButton"
+                                Style="{StaticResource MenuBarButton}" Padding="5,3" Margin="0,0,4,0"
+                                MouseLeftButtonUp="QuickAi_Click"
+                                MouseEnter="MenuBarItem_MouseEnter"
+                                MouseLeave="MenuBarItem_MouseLeave"
+                                ToolTip="Quick AI (Web)">
+                            <TextBlock Text="&#xE724;"
+                                       FontFamily="Segoe MDL2 Assets" FontSize="13"
+                                       Foreground="#60BFFF" VerticalAlignment="Center"/>
                         </Border>
 
                         <!-- コントロールセンター -->

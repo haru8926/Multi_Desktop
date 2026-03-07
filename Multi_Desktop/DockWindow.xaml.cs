@@ -355,7 +355,10 @@ public partial class DockWindow : Window
                         UseShellExecute = true
                     });
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"アプリケーションを起動できませんでした。\nエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         };
 
@@ -419,7 +422,14 @@ public partial class DockWindow : Window
             {
                 if (!string.IsNullOrEmpty(item.ExePath) && System.IO.File.Exists(item.ExePath))
                 {
-                    try { Process.Start(new ProcessStartInfo { FileName = item.ExePath, UseShellExecute = true }); } catch {}
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo { FileName = item.ExePath, UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show($"新しいインスタンスを起動できませんでした。\nエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             };
             menu.Items.Add(openItem);
