@@ -26,6 +26,14 @@ public partial class AiOperationWindow : Window
     {
         InitializeComponent();
         _aiService.SetApiKey(apiKey);
+        Loaded += AiOperationWindow_Loaded;
+    }
+
+    private void AiOperationWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        // 初期メッセージ
+        ChatPanel.Children.Clear();
+        AddChatBubble("こんにちは！AI 操作アシスタントです。PCの操作をお手伝いします。", isUser: false);
     }
 
 
@@ -72,6 +80,42 @@ public partial class AiOperationWindow : Window
         // ユーザーメッセージを表示
         AddChatBubble(userText, isUser: true);
 
+        // --- ローカルコマンドによる高速判定（AIを通さないショートカット） ---
+        var textForCheck = userText.Replace(" ", "").Replace("　", "").ToLowerInvariant();
+        
+        var nextWords = new[] { "次の曲", "次の曲にして", "スキップ", "スキップして", "次へ", "次にして", "次に進めて", "進めて" };
+        var prevWords = new[] { "前の曲", "前の曲にして", "前へ", "戻して", "前に戻して", "戻る", "巻き戻し" };
+        var playWords = new[] { "再生", "再生して", "一時停止", "一時停止して", "止めて", "ストップ", "ストップして" };
+
+        if (textForCheck.Length <= 7) // 本当にシンプルなワードの時のみ即時実行する
+        {
+            if (nextWords.Any(w => textForCheck == w))
+            {
+                AddChatBubble("次の曲にスキップします。(即時実行)", isUser: false);
+                await ExecuteAppActionAsync("music_next");
+                MessageInput.IsEnabled = true;
+                MessageInput.Focus();
+                return;
+            }
+            if (prevWords.Any(w => textForCheck == w))
+            {
+                AddChatBubble("前の曲に戻します。(即時実行)", isUser: false);
+                await ExecuteAppActionAsync("music_prev");
+                MessageInput.IsEnabled = true;
+                MessageInput.Focus();
+                return;
+            }
+            if (playWords.Any(w => textForCheck == w))
+            {
+                AddChatBubble("音楽の再生/一時停止を切り替えます。(即時実行)", isUser: false);
+                await ExecuteAppActionAsync("music_play_pause");
+                MessageInput.IsEnabled = true;
+                MessageInput.Focus();
+                return;
+            }
+        }
+
+        // --- ここから通常のAI連携 ---
         // ローディング表示
         var loadingBubble = AddChatBubble("考え中...", isUser: false, isLoading: true);
 
@@ -129,6 +173,9 @@ public partial class AiOperationWindow : Window
                 case "read_file":
                     details.AppendLine($"📄 ファイル読取: {action.Path}");
                     break;
+                case "app_action":
+                    details.AppendLine($"🎮 アプリ内操作: {action.Command}");
+                    break;
                 default:
                     details.AppendLine($"❓ 不明な操作: {action.Type}");
                     break;
@@ -154,17 +201,26 @@ public partial class AiOperationWindow : Window
     {
         MessageInput.IsEnabled = false;
 
+        Border statusBubble;
         if (showApprovedMessage)
         {
-            AddChatBubble("✅ 操作を承認しました。実行中...", isUser: false);
+            statusBubble = AddChatBubble("✅ 操作を承認しました。実行中...", isUser: false);
         }
         else
         {
-            AddChatBubble("⚡ 安全な操作のため自動実行中...", isUser: false);
+            statusBubble = AddChatBubble("⚡ 安全な操作のため自動実行中...", isUser: false);
         }
 
         var results = new System.Text.StringBuilder();
-        foreach (var action in actions)
+        bool requiresAiFeedback = false;
+        
+        // AIが同じ命令を複数回出力した場合の連続実行（重複）を防止
+        var uniqueActions = actions
+            .GroupBy(a => a.Type + "|" + a.Command + "|" + a.Path)
+            .Select(g => g.First())
+            .ToList();
+
+        foreach (var action in uniqueActions)
         {
             try
             {
@@ -173,21 +229,38 @@ public partial class AiOperationWindow : Window
                     case "shell":
                         var shellResult = await ExecuteShellAsync(action.Command ?? "");
                         results.AppendLine($"[shell: {action.Command}]\n{shellResult}");
+                        requiresAiFeedback = true;
                         break;
                     case "list_dir":
                         var dirResult = ExecuteListDir(action.Path ?? "");
                         results.AppendLine($"[list_dir: {action.Path}]\n{dirResult}");
+                        requiresAiFeedback = true;
                         break;
                     case "read_file":
                         var fileResult = ExecuteReadFile(action.Path ?? "");
                         results.AppendLine($"[read_file: {action.Path}]\n{fileResult}");
+                        requiresAiFeedback = true;
+                        break;
+                    case "app_action":
+                        var appResult = await ExecuteAppActionAsync(action.Command ?? "");
+                        results.AppendLine($"[app_action: {action.Command}]\n{appResult}");
                         break;
                 }
             }
             catch (Exception ex)
             {
                 results.AppendLine($"[{action.Type}エラー] {ex.Message}");
+                requiresAiFeedback = true; // エラー時はAIに報告する
             }
+        }
+
+        if (!requiresAiFeedback)
+        {
+            // アプリ内操作のみで正常終了した場合は、実行中バブルを消去してループを抜ける
+            ChatPanel.Children.Remove(statusBubble);
+            MessageInput.IsEnabled = true;
+            MessageInput.Focus();
+            return;
         }
 
         // 実行結果をAIに返して続きを取得
@@ -233,6 +306,10 @@ public partial class AiOperationWindow : Window
         // フォルダ一覧やファイル読み取りは内容をAIに送信するため安全とみなさない（要承認）
         if (action.Type == "list_dir" || action.Type == "read_file")
             return false;
+
+        // アプリ内操作は常に安全とする
+        if (action.Type == "app_action")
+            return true;
 
         if (action.Type == "shell")
         {
@@ -386,43 +463,126 @@ public partial class AiOperationWindow : Window
         return content;
     }
 
+    private async Task<string> ExecuteAppActionAsync(string command)
+    {
+        switch (command)
+        {
+            case "switch_main":
+                var mainWin = System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                if (mainWin != null)
+                {
+                    await mainWin.SwitchToModeAsync(DesktopMode.Main);
+                    return "メインモードに切り替えました";
+                }
+                return "メインウィンドウが見つかりません";
+            case "switch_sub":
+                var subWin = System.Windows.Application.Current.Windows.OfType<MainWindow>().FirstOrDefault();
+                if (subWin != null)
+                {
+                    await subWin.SwitchToModeAsync(DesktopMode.Sub);
+                    return "サブモードに切り替えました";
+                }
+                return "メインウィンドウが見つかりません";
+            case "music_play_pause":
+                var playWin = System.Windows.Application.Current.Windows.OfType<MusicPlayerWindow>().FirstOrDefault();
+                if (playWin != null)
+                {
+                    playWin.PlayPause();
+                    return "音楽の再生/一時停止を切り替えました";
+                }
+                return "ミュージックプレーヤーが起動していません";
+            case "music_next":
+                var nextWin = System.Windows.Application.Current.Windows.OfType<MusicPlayerWindow>().FirstOrDefault();
+                if (nextWin != null)
+                {
+                    nextWin.NextTrack();
+                    return "次の曲へスキップしました";
+                }
+                return "ミュージックプレーヤーが起動していません";
+            case "music_prev":
+                var prevWin = System.Windows.Application.Current.Windows.OfType<MusicPlayerWindow>().FirstOrDefault();
+                if (prevWin != null)
+                {
+                    prevWin.PrevTrack();
+                    return "前の曲へ戻りました";
+                }
+                return "ミュージックプレーヤーが起動していません";
+            default:
+                return $"不明なアプリ内操作: {command}";
+        }
+    }
+
     // ─── UI ヘルパー ─────────────────────────────────
     private Border AddChatBubble(string text, bool isUser, bool isLoading = false)
     {
-        var bubble = new Border
+        var container = new Border
         {
-            Background = new SolidColorBrush(isUser
-                ? System.Windows.Media.Color.FromArgb(0x33, 0x55, 0xAA, 0xFF)
-                : System.Windows.Media.Color.FromArgb(0x15, 0xFF, 0xFF, 0xFF)),
-            CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(12, 8, 12, 8),
             Margin = isUser
                 ? new Thickness(40, 0, 0, 6)
-                : new Thickness(0, 0, 40, 6),
+                : new Thickness(0, 0, 20, 6),
             HorizontalAlignment = isUser
                 ? System.Windows.HorizontalAlignment.Right
                 : System.Windows.HorizontalAlignment.Left,
-            MaxWidth = 280
+            MaxWidth = 290
+        };
+
+        var panel = new DockPanel();
+
+        if (!isUser)
+        {
+            var avatarBorder = new Border
+            {
+                Width = 24, Height = 24, CornerRadius = new CornerRadius(12),
+                Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(0x40, 0x1A, 0x2A, 0x50)),
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+            try 
+            {
+                var img = new System.Windows.Controls.Image
+                {
+                    Source = new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://siteoforigin:,,,/Assets/modern_ai_logo.png")),
+                    Stretch = Stretch.Uniform,
+                    Margin = new Thickness(4)
+                };
+                avatarBorder.Child = img;
+            } catch { } // 画像読み込み失敗時は背景色のみ
+
+            DockPanel.SetDock(avatarBorder, Dock.Left);
+            panel.Children.Add(avatarBorder);
+        }
+
+        var bubble = new Border
+        {
+            Background = new SolidColorBrush(isUser
+                ? System.Windows.Media.Color.FromArgb(0x66, 0x1A, 0x6A, 0xFF) // モダンなブルー
+                : System.Windows.Media.Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)), // 半透明ホワイト
+            CornerRadius = new CornerRadius(12, 12, isUser ? 2 : 12, isUser ? 12 : 2),
+            Padding = new Thickness(12, 8, 12, 8),
         };
 
         var tb = new TextBlock
         {
             Text = text,
-            FontSize = 12,
+            FontSize = 12.5,
             Foreground = new SolidColorBrush(isLoading
-                ? System.Windows.Media.Color.FromArgb(0x77, 0xFF, 0xFF, 0xFF)
-                : System.Windows.Media.Color.FromArgb(0xCC, 0xFF, 0xFF, 0xFF)),
+                ? System.Windows.Media.Color.FromArgb(0x88, 0xFF, 0xFF, 0xFF)
+                : System.Windows.Media.Color.FromArgb(0xEE, 0xFF, 0xFF, 0xFF)),
             TextWrapping = TextWrapping.Wrap,
-            FontStyle = isLoading ? FontStyles.Italic : FontStyles.Normal
+            FontStyle = isLoading ? FontStyles.Italic : FontStyles.Normal,
+            LineHeight = 18
         };
 
         bubble.Child = tb;
-        ChatPanel.Children.Add(bubble);
+        panel.Children.Add(bubble);
+        container.Child = panel;
+
+        ChatPanel.Children.Add(container);
 
         // スクロールを最下部に
         ChatScrollViewer.ScrollToEnd();
 
-        return bubble;
+        return container;
     }
 
     // ─── 外部からの設定更新 ──────────────────────────

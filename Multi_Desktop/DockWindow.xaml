@@ -141,7 +141,39 @@
                 <StackPanel Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Bottom">
-                    <!-- 設定ボタン (左端) — サイズはアイコンサイズに合わせて動的に設定 -->
+                    
+                    <!-- AIボタン (左端) -->
+                    <Grid x:Name="AiButtonContainer"
+                          Margin="2,0,2,0"
+                          VerticalAlignment="Bottom"
+                          Cursor="Hand">
+                        <Border x:Name="AiButtonBorder"
+                                CornerRadius="12"
+                                Background="#1A2A50"
+                                VerticalAlignment="Bottom"
+                                RenderTransformOrigin="0.5,1.0">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <!-- 生成したモダンなロゴを割り当て -->
+                            <Image x:Name="AiButtonIcon"
+                                   Source="pack://siteoforigin:,,,/Assets/modern_ai_logo.png"
+                                   Stretch="Uniform" Margin="4"/>
+                        </Border>
+                        <Grid.ToolTip>
+                            <ToolTip Content="Quick AI 操作アシスタント"
+                                     Style="{StaticResource DockToolTip}"/>
+                        </Grid.ToolTip>
+                    </Grid>
+
+                    <Border x:Name="AiSeparator"
+                            Width="2"
+                            Background="#30ffffff"
+                            CornerRadius="1"
+                            Margin="4,0,4,6"
+                            VerticalAlignment="Bottom"/>
+
+                    <!-- 設定ボタン -->
                     <Grid x:Name="SettingsButtonContainer"
                           Margin="2,0,2,0"
                           VerticalAlignment="Bottom"

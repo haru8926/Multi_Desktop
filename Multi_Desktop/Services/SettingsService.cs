@@ -1,4 +1,6 @@
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Multi_Desktop.Services;
@@ -30,8 +32,16 @@ public class SettingsService
         try
         {
             var json = await File.ReadAllTextAsync(SettingsFilePath);
-            return JsonSerializer.Deserialize<Models.AppSettings>(json, JsonOptions)
-                   ?? new Models.AppSettings();
+            var settings = JsonSerializer.Deserialize<Models.AppSettings>(json, JsonOptions)
+                           ?? new Models.AppSettings();
+
+            // Gemini API キーを復号化（暗号化されている場合のみ）
+            if (!string.IsNullOrEmpty(settings.GeminiApiKey))
+            {
+                settings.GeminiApiKey = DecryptString(settings.GeminiApiKey);
+            }
+
+            return settings;
         }
         catch
         {
@@ -45,7 +55,57 @@ public class SettingsService
     public async Task SaveAsync(Models.AppSettings settings)
     {
         Directory.CreateDirectory(SettingsDir);
-        var json = JsonSerializer.Serialize(settings, JsonOptions);
-        await File.WriteAllTextAsync(SettingsFilePath, json);
+
+        // オリジナルのキーを保持
+        var originalKey = settings.GeminiApiKey;
+        try
+        {
+            // 保存前に一時的に暗号化
+            if (!string.IsNullOrEmpty(settings.GeminiApiKey))
+            {
+                settings.GeminiApiKey = EncryptString(settings.GeminiApiKey);
+            }
+
+            var json = JsonSerializer.Serialize(settings, JsonOptions);
+            await File.WriteAllTextAsync(SettingsFilePath, json);
+        }
+        finally
+        {
+            // メモリ上の設定が暗号化されたままにならないよう元に戻す
+            settings.GeminiApiKey = originalKey;
+        }
+    }
+
+    private string EncryptString(string plainText)
+    {
+        if (string.IsNullOrEmpty(plainText)) return string.Empty;
+
+        try
+        {
+            var data = Encoding.UTF8.GetBytes(plainText);
+            var encryptedData = ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
+            return Convert.ToBase64String(encryptedData);
+        }
+        catch
+        {
+            return plainText;
+        }
+    }
+
+    private string DecryptString(string encryptedText)
+    {
+        if (string.IsNullOrEmpty(encryptedText)) return string.Empty;
+
+        try
+        {
+            var data = Convert.FromBase64String(encryptedText);
+            var decodedData = ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
+            return Encoding.UTF8.GetString(decodedData);
+        }
+        catch
+        {
+            // 復号に失敗した場合はそのまま返す (古いプレーンテキスト版との互換性のため)
+            return encryptedText;
+        }
     }
 }

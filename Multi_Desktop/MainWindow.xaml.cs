@@ -91,10 +91,10 @@ public partial class MainWindow : Window
         // 現在のモードに応じてDockを表示
         ApplyDockForCurrentMode();
 
-        // AI アシスタント設定をメニューバーに反映
+        // AI アシスタント設定を反映
+        _dockWindow?.UpdateAiApiKey(_settings.GeminiApiKey);
         foreach (var mb in _menuBarWindows)
         {
-            mb.UpdateAiApiKey(_settings.GeminiApiKey);
             mb.UpdateQuickAiService(_settings.QuickAiService);
         }
     }
@@ -162,10 +162,10 @@ public partial class MainWindow : Window
         foreach (var mb in _menuBarWindows)
             mb.UpdateMusicSettings(_settings.MusicSettings);
 
-        // AI アシスタント設定をメニューバーに反映
+        // AI アシスタント設定を反映
+        _dockWindow.UpdateAiApiKey(_settings.GeminiApiKey);
         foreach (var mb in _menuBarWindows)
         {
-            mb.UpdateAiApiKey(_settings.GeminiApiKey);
             mb.UpdateQuickAiService(_settings.QuickAiService);
         }
     }
@@ -229,6 +229,7 @@ public partial class MainWindow : Window
         {
             _isReallyClosing = true;
             Close();
+            System.Windows.Application.Current.Shutdown();
         };
         contextMenu.Items.Add(exitItem);
 
@@ -314,10 +315,10 @@ public partial class MainWindow : Window
             foreach (var mb in _menuBarWindows)
                 mb.UpdateMusicSettings(_settings.MusicSettings);
 
-            // AI アシスタント設定をメニューバーに反映
+            // AI アシスタント設定を反映
+            _dockWindow?.UpdateAiApiKey(_settings.GeminiApiKey);
             foreach (var mb in _menuBarWindows)
             {
-                mb.UpdateAiApiKey(_settings.GeminiApiKey);
                 mb.UpdateQuickAiService(_settings.QuickAiService);
             }
         }
@@ -328,6 +329,7 @@ public partial class MainWindow : Window
         // 確認なしで完全にアプリを終了する
         _isReallyClosing = true;
         Close();
+        System.Windows.Application.Current.Shutdown();
     }
 
     // ─── 切り替えロジック ────────────────────────────
@@ -337,7 +339,7 @@ public partial class MainWindow : Window
         await SwitchToModeAsync(nextMode);
     }
 
-    private async Task SwitchToModeAsync(DesktopMode mode)
+    public async Task SwitchToModeAsync(DesktopMode mode)
     {
         if (_isSwitching) return;
 

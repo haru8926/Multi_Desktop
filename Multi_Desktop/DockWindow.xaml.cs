@@ -23,6 +23,8 @@ public partial class DockWindow : Window
     private readonly RunningAppService _runningAppService;
     private readonly TaskbarSettings _settings;
     private bool _isAutoHidden;
+    private string _aiApiKey = "";
+    private AiOperationWindow? _aiOperationWindow;
     private readonly Duration _animDuration = new(TimeSpan.FromMilliseconds(200));
     private readonly Duration _magnifyDuration = new(TimeSpan.FromMilliseconds(120));
 
@@ -102,9 +104,15 @@ public partial class DockWindow : Window
         SettingsButtonBorder.Height = size;
         SettingsButtonIcon.FontSize = size * 0.42;
         SettingsSeparator.Height = size * 0.55;
+
+        // AIボタンも同様にサイズ合わせする
+        AiButtonContainer.Width = size + 4;
+        AiButtonBorder.Width = size;
+        AiButtonBorder.Height = size;
+        AiSeparator.Height = size * 0.55;
     }
 
-    /// <summary>設定ボタンのイベントとホバーアニメーションを設定</summary>
+    /// <summary>設定とAIボタンのイベントおよびホバーアニメーションを設定</summary>
     private void SetupSettingsButton()
     {
         SettingsButtonContainer.MouseLeftButtonUp += (_, _) =>
@@ -113,14 +121,44 @@ public partial class DockWindow : Window
         };
 
         // ホバーでアイコン拡大
-        SettingsButtonContainer.MouseEnter += (_, _) =>
+        SettingsButtonContainer.MouseEnter += (_, _) => AnimateScale(SettingsButtonBorder, 1.2, _magnifyDuration);
+        SettingsButtonContainer.MouseLeave += (_, _) => AnimateScale(SettingsButtonBorder, 1.0, _magnifyDuration);
+
+        // AIボタン
+        AiButtonContainer.MouseLeftButtonUp += AiButton_Click;
+        AiButtonContainer.MouseEnter += (_, _) => AnimateScale(AiButtonBorder, 1.2, _magnifyDuration);
+        AiButtonContainer.MouseLeave += (_, _) => AnimateScale(AiButtonBorder, 1.0, _magnifyDuration);
+    }
+
+    private void AiButton_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (_aiOperationWindow == null || !_aiOperationWindow.IsLoaded)
         {
-            AnimateScale(SettingsButtonBorder, 1.2, _magnifyDuration);
-        };
-        SettingsButtonContainer.MouseLeave += (_, _) =>
+            _aiOperationWindow = new AiOperationWindow(_aiApiKey);
+            _aiOperationWindow.Closed += (s, ev) => _aiOperationWindow = null;
+        }
+
+        if (_aiOperationWindow.IsVisible)
         {
-            AnimateScale(SettingsButtonBorder, 1.0, _magnifyDuration);
-        };
+            _aiOperationWindow.Hide();
+        }
+        else
+        {
+            // Dockの上に表示
+            var p = GetCurrentLogicalScreenBounds();
+            var left = p.Left + (p.Width - _aiOperationWindow.Width) / 2;
+            var top = p.Bottom - this.Height - _aiOperationWindow.Height - 10;
+            _aiOperationWindow.Left = left;
+            _aiOperationWindow.Top = top;
+            _aiOperationWindow.Show();
+            _aiOperationWindow.Activate();
+        }
+    }
+
+    public void UpdateAiApiKey(string key)
+    {
+        _aiApiKey = key;
+        _aiOperationWindow?.UpdateApiKey(key);
     }
 
     /// <summary>現在のマウス位置があるディスプレイの論理座標を取得する</summary>

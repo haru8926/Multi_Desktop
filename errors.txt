@@ -1,0 +1,22 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Multi_Desktop.PluginApi -> C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop.PluginApi\bin\Debug\net8.0-windows10.0.19041.0\Multi_Desktop.PluginApi.dll
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MainWindow.xaml.cs(97,16): error CS1061: 'MenuBarWindow' does not contain a definition for 'UpdateAiApiKey' and no accessible extension method 'UpdateAiApiKey' accepting a first argument of type 'MenuBarWindow' could be found (are you missing a using directive or an assembly reference?) [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MusicPlayerWindow.xaml.cs(132,17): warning CS8602: Dereference of a possibly null reference. [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MusicPlayerWindow.xaml.cs(147,13): warning CS8602: Dereference of a possibly null reference. [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MenuBarWindow.xaml.cs(39,18): warning CS0169: The field 'MenuBarWindow._isTempStorageDragging' is never used [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MenuBarWindow.xaml.cs(40,34): warning CS0169: The field 'MenuBarWindow._tempStorageDragStartPoint' is never used [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\DockWindow.xaml.cs(617,18): warning CS0414: The field 'DockWindow._mouseIsOverDock' is assigned but its value is never used [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+
+Build FAILED.
+
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MusicPlayerWindow.xaml.cs(132,17): warning CS8602: Dereference of a possibly null reference. [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MusicPlayerWindow.xaml.cs(147,13): warning CS8602: Dereference of a possibly null reference. [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MenuBarWindow.xaml.cs(39,18): warning CS0169: The field 'MenuBarWindow._isTempStorageDragging' is never used [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MenuBarWindow.xaml.cs(40,34): warning CS0169: The field 'MenuBarWindow._tempStorageDragStartPoint' is never used [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\DockWindow.xaml.cs(617,18): warning CS0414: The field 'DockWindow._mouseIsOverDock' is assigned but its value is never used [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\MainWindow.xaml.cs(97,16): error CS1061: 'MenuBarWindow' does not contain a definition for 'UpdateAiApiKey' and no accessible extension method 'UpdateAiApiKey' accepting a first argument of type 'MenuBarWindow' could be found (are you missing a using directive or an assembly reference?) [C:\MyApp\Malti_Desktop_WPF\Multi_Desktop\Multi_Desktop\Multi_Desktop_54tuhfds_wpftmp.csproj]
+    5 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.48

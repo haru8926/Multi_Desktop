@@ -12,9 +12,9 @@
     <Border x:Name="WindowBorder" CornerRadius="12" Padding="0"
             BorderBrush="#30ffffff" BorderThickness="0.8">
         <Border.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Color="#f22a2a38" Offset="0"/>
-                <GradientStop Color="#f5222230" Offset="1"/>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#e01A1A24" Offset="0"/>
+                <GradientStop Color="#ee101018" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
         <Border.Effect>
@@ -34,12 +34,10 @@
                     CornerRadius="12,12,0,0">
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Quick AI から アイコンも変更(オプション) -->
-                        <TextBlock Text="&#xE99A;" FontFamily="Segoe MDL2 Assets"
-                                   FontSize="14" Foreground="#FFCC66"
-                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="AI 操作" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="White" VerticalAlignment="Center"/>
+                        <Image Source="pack://siteoforigin:,,,/Assets/modern_ai_logo.png" 
+                               Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center" Stretch="Uniform"/>
+                        <TextBlock Text="AI アシスタント" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#EAEAEA" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                         <!-- 最小化（バックグラウンド） -->
@@ -68,12 +66,7 @@
                           HorizontalScrollBarVisibility="Disabled"
                           Padding="0">
                 <StackPanel x:Name="ChatPanel" Margin="10,8,10,8">
-                    <!-- 初期メッセージ -->
-                    <Border Background="#15ffffff" CornerRadius="10" Padding="12,8" Margin="0,0,40,6"
-                            HorizontalAlignment="Left">
-                        <TextBlock Text="こんにちは！AI 操作アシスタントです。PCの操作をお手伝いします。"
-                                   FontSize="12" Foreground="#ccffffff" TextWrapping="Wrap" MaxWidth="240"/>
-                    </Border>
+                    <!-- 初期メッセージはコードビハインドから動的に追加する -->
                 </StackPanel>
             </ScrollViewer>
 

@@ -409,6 +409,8 @@ public partial class MusicPlayerWindow : Window
         => await SwitchService("Spotify");
 
     // ─── 再生コントロール ────────────────────────────
+    public void PlayPause() => PlayPause_Click(this, null!);
+
     private async void PlayPause_Click(object sender, MouseButtonEventArgs e)
     {
         if (!_isWebViewReady || MusicWebView.CoreWebView2 == null) return;
@@ -448,6 +450,8 @@ public partial class MusicPlayerWindow : Window
         await MusicWebView.CoreWebView2.ExecuteScriptAsync(script);
     }
 
+    public void PrevTrack() => PrevTrack_Click(this, null!);
+
     private async void PrevTrack_Click(object sender, MouseButtonEventArgs e)
     {
         if (!_isWebViewReady || MusicWebView.CoreWebView2 == null) return;
@@ -486,6 +490,8 @@ public partial class MusicPlayerWindow : Window
 
         await MusicWebView.CoreWebView2.ExecuteScriptAsync(script);
     }
+
+    public void NextTrack() => NextTrack_Click(this, null!);
 
     private async void NextTrack_Click(object sender, MouseButtonEventArgs e)
     {

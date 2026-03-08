@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -20,20 +21,36 @@ public class AiAssistantService
     private readonly List<ChatMessage> _history = new();
     private string _apiKey = string.Empty;
 
-    private const string SystemInstruction = @"あなたはWindows PCの操作を支援するAIアシスタント「Quick AI」です。
+    private string SystemInstruction => $@"あなたはWindows PCの操作を支援するAIアシスタント「Quick AI」です。
+現在のユーザー名: {Environment.UserName}
+ユーザープロファイルパス: {Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}
+ダウンロードフォルダ: {Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads")}
+
 ユーザーの要求に応じて、必ず以下のJSON形式""のみ""で応答してください。マークダウンのコードブロックで囲まないでください。純粋なJSONだけを返してください。
 
-{""said"":""ユーザーへの応答メッセージ"", ""actions"":[]}
+{{""said"":""ユーザーへの応答メッセージ"", ""actions"":[]}}
 
 操作が必要な場合は actions 配列に以下の形式でコマンドを追加してください：
-- シェルコマンド実行: {""type"":""shell"",""command"":""実行するコマンド""}
-- フォルダ内容取得: {""type"":""list_dir"",""path"":""フォルダパス""}
-- ファイル読み取り: {""type"":""read_file"",""path"":""ファイルパス""}
+- シェルコマンド実行: {{""type"":""shell"",""command"":""実行するコマンド""}}
+- フォルダ内容取得: {{""type"":""list_dir"",""path"":""フォルダパス""}}
+- ファイル読み取り: {{""type"":""read_file"",""path"":""ファイルパス""}}
+- QuickAI関連アプリ操作: {{""type"":""app_action"",""command"":""実行するアプリ内コマンド""}}
+  ※利用可能なアプリ内コマンド（commandの値は以下のいずれかを指定）:
+    - switch_main : メインモードに切り替え
+    - switch_sub : サブモードに切り替え
+    - music_play_pause : 音楽の再生/一時停止
+    - music_next : 次の曲へスキップ
+    - music_prev : 前の曲へ戻る
+
+【重要な指示】
+1. 目的のファイルが見つからない場合、ユーザーに尋ねる前に、PowerShellコマンドを使って柔軟な検索を試みてください。（例: `Get-ChildItem -Path 'パス' -Recurse -Filter '*キーワード*' -ErrorAction SilentlyContinue` や、新しい順でのソートなど）
+2. 音楽や動画を探すよう指示された場合、名前の一部だけでも検索し、英語名などの別名や、最近ダウンロードされたもの（`Sort-Object LastWriteTime -Descending`）から推測して見つけ出してください。
+3. `list_dir` は先頭50件しか取得できないため、多くのファイルがある場所での特定には `shell` を使ったフィルタリング検索を積極的に活用してください。
 
 操作が不要な場合は actions を空配列にしてください。
 said には必ずユーザーへの説明メッセージを含めてください。
 ユーザーの操作を承認する必要がある場合は、said でその旨を説明してください。
-情報が足りない場合は、said で質問してください。必要であればフォルダの中身を見たりファイルの中身を読んだりするアクションを使ってください。";
+情報が足りない場合でも、まずは可能な限り自己解決のための探索アクションを実行してください。";
 
     public bool HasApiKey => !string.IsNullOrWhiteSpace(_apiKey);
 

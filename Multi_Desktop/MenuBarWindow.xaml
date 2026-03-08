@@ -192,17 +192,7 @@
                                        Foreground="#88ffffff" VerticalAlignment="Center"/>
                         </Border>
 
-                        <!-- AI 操作 -->
-                        <Border x:Name="AiOperationButton"
-                                Style="{StaticResource MenuBarButton}" Padding="5,3" Margin="0,0,4,0"
-                                MouseLeftButtonUp="AiOperation_Click"
-                                MouseEnter="MenuBarItem_MouseEnter"
-                                MouseLeave="MenuBarItem_MouseLeave"
-                                ToolTip="AI 操作">
-                            <TextBlock Text="&#xE99A;"
-                                       FontFamily="Segoe MDL2 Assets" FontSize="13"
-                                       Foreground="#FFCC66" VerticalAlignment="Center"/>
-                        </Border>
+                        <!-- AI 操作ボタンはDockへ移行したため削除 -->
 
                         <!-- Quick AI (Web) -->
                         <Border x:Name="QuickAiButton"

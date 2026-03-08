@@ -31,9 +31,7 @@ public partial class MenuBarWindow : Window
     private bool _suppressVolumeEvent;
     private MusicPlayerWindow? _musicPlayerWindow;
     private MusicServiceSettings _musicSettings = new();
-    private AiOperationWindow? _aiOperationWindow;
     private QuickAiPanelWindow? _quickAiWindow;
-    private string _geminiApiKey = string.Empty;
     private string _quickAiService = "ChatGPT";
 
     // ─── 一時保存トレイのデータ ──────────────────────────
@@ -881,49 +879,6 @@ public partial class MenuBarWindow : Window
         _musicPlayerWindow?.UpdateSettings(settings);
     }
 
-    // ─── AI 操作パネル ──────────────────────────────
-    private void AiOperation_Click(object sender, MouseButtonEventArgs e)
-    {
-        if (_aiOperationWindow == null || !_aiOperationWindow.IsLoaded)
-        {
-            _aiOperationWindow = new AiOperationWindow(_geminiApiKey);
-            _aiOperationWindow.OnPanelHidden += (s, ev) =>
-            {
-                // 最小化時の処理（必要に応じて）
-            };
-            _aiOperationWindow.Closed += (s, _) =>
-            {
-                _aiOperationWindow = null;
-            };
-        }
-
-        // ボタンの位置を基準にフローティング表示位置を計算
-        var aiButton = AiOperationButton;
-        double left = Left;
-        double top = 28;
-        try
-        {
-            var pt = aiButton.PointToScreen(new System.Windows.Point(0, 0));
-            var source = PresentationSource.FromVisual(aiButton);
-            if (source?.CompositionTarget != null)
-            {
-                double dpiX = source.CompositionTarget.TransformToDevice.M11;
-                double dpiY = source.CompositionTarget.TransformToDevice.M22;
-                left = pt.X / dpiX - 200;
-                top = pt.Y / dpiY + 28;
-            }
-        }
-        catch { }
-
-        if (_aiOperationWindow.IsVisible)
-        {
-            _aiOperationWindow.Hide();
-        }
-        else
-        {
-            _aiOperationWindow.ShowAt(left, top);
-        }
-    }
 
     // ─── Quick AI パネル (Web) ─────────────────────────
     private void QuickAi_Click(object sender, MouseButtonEventArgs e)
@@ -977,14 +932,6 @@ public partial class MenuBarWindow : Window
         }
     }
 
-    /// <summary>
-    /// Gemini API キーを更新（MainWindowから呼び出し）
-    /// </summary>
-    public void UpdateAiApiKey(string apiKey)
-    {
-        _geminiApiKey = apiKey;
-        _aiOperationWindow?.UpdateApiKey(apiKey);
-    }
 
     /// <summary>
     /// Quick AI サービスを更新（MainWindowから呼び出し）
@@ -1213,7 +1160,6 @@ public partial class MenuBarWindow : Window
 
         UnregisterAsAppBar();
         try { _musicPlayerWindow?.Close(); } catch { }
-        try { _aiOperationWindow?.Close(); } catch { }
         try { _quickAiWindow?.Close(); } catch { }
     }
 
