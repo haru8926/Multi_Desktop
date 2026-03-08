@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -87,7 +88,14 @@ public partial class AiOperationWindow : Window
             // 操作がある場合は承認バナーを表示
             if (response.Actions.Count > 0)
             {
-                ShowApprovalBanner(response.Actions);
+                if (AreActionsSafe(response.Actions))
+                {
+                    await ExecuteActionsAsync(response.Actions, showApprovedMessage: false);
+                }
+                else
+                {
+                    ShowApprovalBanner(response.Actions);
+                }
             }
         }
         catch (Exception ex)
@@ -139,8 +147,21 @@ public partial class AiOperationWindow : Window
         var actions = _pendingActions;
         _pendingActions = null;
 
+        await ExecuteActionsAsync(actions, showApprovedMessage: true);
+    }
+
+    private async Task ExecuteActionsAsync(List<AiAction> actions, bool showApprovedMessage)
+    {
         MessageInput.IsEnabled = false;
-        AddChatBubble("✅ 操作を承認しました。実行中...", isUser: false);
+
+        if (showApprovedMessage)
+        {
+            AddChatBubble("✅ 操作を承認しました。実行中...", isUser: false);
+        }
+        else
+        {
+            AddChatBubble("⚡ 安全な操作のため自動実行中...", isUser: false);
+        }
 
         var results = new System.Text.StringBuilder();
         foreach (var action in actions)
@@ -180,7 +201,14 @@ public partial class AiOperationWindow : Window
 
             if (response.Actions.Count > 0)
             {
-                ShowApprovalBanner(response.Actions);
+                if (AreActionsSafe(response.Actions))
+                {
+                    await ExecuteActionsAsync(response.Actions, showApprovedMessage: false);
+                }
+                else
+                {
+                    ShowApprovalBanner(response.Actions);
+                }
             }
         }
         catch (Exception ex)
@@ -193,6 +221,54 @@ public partial class AiOperationWindow : Window
             MessageInput.IsEnabled = true;
             MessageInput.Focus();
         }
+    }
+
+    private bool AreActionsSafe(List<AiAction> actions)
+    {
+        return actions.All(IsActionSafe);
+    }
+
+    private bool IsActionSafe(AiAction action)
+    {
+        // フォルダ一覧やファイル読み取りは内容をAIに送信するため安全とみなさない（要承認）
+        if (action.Type == "list_dir" || action.Type == "read_file")
+            return false;
+
+        if (action.Type == "shell")
+        {
+            var cmd = action.Command?.ToLowerInvariant() ?? "";
+            
+            // 危険なコマンドキーワードを定義
+            string[] dangerousKeywords = {
+                "del", "rm", "rmdir", "remove-item", "erase",
+                "curl", "wget", "invoke-webrequest", "iwr",
+                "format", "rename", "ren", "move", "net", 
+                "copy", "cp", "robocopy", "takeown", "icacls",
+                "mklink", "cipher", "diskpart"
+            };
+
+            // コマンド文字列内に危険なキーワードが単語として含まれているかチェック
+            // 簡易的にスペースで区切って判定
+            var tokens = cmd.Split(new[] { ' ', '\t', '\n', '\r', '|', '&', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var token in tokens)
+            {
+                if (dangerousKeywords.Contains(token))
+                {
+                    return false;
+                }
+                
+                // コマンドのエイリアスやパスの可能性もあるため、部分一致も警戒
+                if (token.EndsWith(".exe") || token.EndsWith(".ps1") || token.EndsWith(".bat") || token.EndsWith(".cmd"))
+                {
+                    if (dangerousKeywords.Any(k => token.Contains(k)))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false; // 未知の操作は要承認
     }
 
     private async void RejectAction_Click(object sender, MouseButtonEventArgs e)
