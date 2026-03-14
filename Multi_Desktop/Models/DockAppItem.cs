@@ -2,6 +2,12 @@ using System.Windows.Media;
 
 namespace Multi_Desktop.Models;
 
+public class WindowInfo
+{
+    public IntPtr Handle { get; set; }
+    public string Title { get; set; } = string.Empty;
+}
+
 /// <summary>
 /// Dockに表示するアプリケーション情報
 /// </summary>
@@ -24,4 +30,7 @@ public class DockAppItem
 
     /// <summary>ウィンドウハンドル（実行中の場合）</summary>
     public IntPtr WindowHandle { get; set; }
+
+    /// <summary>このアプリに属するすべてのウィンドウ</summary>
+    public List<WindowInfo> Windows { get; set; } = new();
 }

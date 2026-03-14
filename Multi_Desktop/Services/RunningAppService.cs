@@ -26,7 +26,7 @@ public class RunningAppService : IDisposable
     private static readonly Dictionary<string, ImageSource?> _iconCache = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>前回のDockアイテムのスナップショット（差分検出用）</summary>
-    private List<(string exePath, bool isRunning, bool isPinned, IntPtr handle)> _lastSnapshot = new();
+    private List<(string exePath, bool isRunning, bool isPinned, IntPtr handle, int windowCount)> _lastSnapshot = new();
 
     /// <summary>Dock に表示するアプリ一覧（ピン留め + 実行中）</summary>
     public ObservableCollection<DockAppItem> DockItems { get; } = new();
@@ -128,7 +128,7 @@ public class RunningAppService : IDisposable
         });
 
         // 3. 差分検出: 変更がなければ UI更新をスキップ
-        var newSnapshot = newItems.Select(i => (i.ExePath, i.IsRunning, i.IsPinned, i.WindowHandle)).ToList();
+        var newSnapshot = newItems.Select(i => (i.ExePath, i.IsRunning, i.IsPinned, i.WindowHandle, i.Windows.Count)).ToList();
         if (IsSnapshotEqual(newSnapshot, _lastSnapshot))
         {
             return; // 変更なし → UIにタッチしない
@@ -148,8 +148,8 @@ public class RunningAppService : IDisposable
 
     /// <summary>スナップショットが等しいか判定</summary>
     private static bool IsSnapshotEqual(
-        List<(string exePath, bool isRunning, bool isPinned, IntPtr handle)> a,
-        List<(string exePath, bool isRunning, bool isPinned, IntPtr handle)> b)
+        List<(string exePath, bool isRunning, bool isPinned, IntPtr handle, int windowCount)> a,
+        List<(string exePath, bool isRunning, bool isPinned, IntPtr handle, int windowCount)> b)
     {
         if (a.Count != b.Count) return false;
         for (int i = 0; i < a.Count; i++)
@@ -157,7 +157,8 @@ public class RunningAppService : IDisposable
             if (!string.Equals(a[i].exePath, b[i].exePath, StringComparison.OrdinalIgnoreCase)
                 || a[i].isRunning != b[i].isRunning
                 || a[i].isPinned != b[i].isPinned
-                || a[i].handle != b[i].handle)
+                || a[i].handle != b[i].handle
+                || a[i].windowCount != b[i].windowCount)
                 return false;
         }
         return true;
@@ -166,8 +167,7 @@ public class RunningAppService : IDisposable
     /// <summary>表示可能なウィンドウ一覧を取得</summary>
     public static List<DockAppItem> GetVisibleWindows()
     {
-        var items = new List<DockAppItem>();
-        var seenPids = new HashSet<uint>();
+        var itemsMap = new Dictionary<string, DockAppItem>(StringComparer.OrdinalIgnoreCase);
 
         NativeMethods.EnumWindows((hWnd, _) =>
         {
@@ -175,10 +175,6 @@ public class RunningAppService : IDisposable
                 return true;
 
             NativeMethods.GetWindowThreadProcessId(hWnd, out var pid);
-
-            // 同じプロセスのウィンドウは1つにまとめる
-            if (!seenPids.Add(pid))
-                return true;
 
             Process? proc = null;
             try
@@ -199,6 +195,14 @@ public class RunningAppService : IDisposable
 
                 if (string.IsNullOrWhiteSpace(title))
                     return true;
+
+                string groupKey = !string.IsNullOrEmpty(exePath) ? exePath : procName;
+
+                if (itemsMap.TryGetValue(groupKey, out var existingItem))
+                {
+                    existingItem.Windows.Add(new WindowInfo { Handle = hWnd, Title = title });
+                    return true;
+                }
 
                 // アイコン取得（キャッシュ優先）
                 ImageSource? icon = null;
@@ -232,7 +236,7 @@ public class RunningAppService : IDisposable
                 }
                 catch { /* アイコン取得失敗は無視 */ }
 
-                items.Add(new DockAppItem
+                var newItem = new DockAppItem
                 {
                     Name = title,
                     ExePath = exePath,
@@ -240,7 +244,9 @@ public class RunningAppService : IDisposable
                     IsRunning = true,
                     IsPinned = false,
                     WindowHandle = hWnd
-                });
+                };
+                newItem.Windows.Add(new WindowInfo { Handle = hWnd, Title = title });
+                itemsMap[groupKey] = newItem;
             }
             catch { /* プロセス情報取得失敗は無視 */ }
             finally
@@ -251,7 +257,7 @@ public class RunningAppService : IDisposable
             return true;
         }, IntPtr.Zero);
 
-        return items;
+        return itemsMap.Values.ToList();
     }
 
     /// <summary>キャッシュからアイコンを取得。未キャッシュならEXEから取得してキャッシュ</summary>

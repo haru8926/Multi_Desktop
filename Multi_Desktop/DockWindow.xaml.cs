@@ -144,14 +144,11 @@ public partial class DockWindow : Window
         }
         else
         {
-            // Dockの上に表示
+            // 画面の右下に配置 (右端から20px, Dockの少し上)
             var p = GetCurrentLogicalScreenBounds();
-            var left = p.Left + (p.Width - _aiOperationWindow.Width) / 2;
+            var left = p.Right - _aiOperationWindow.Width - 20;
             var top = p.Bottom - this.Height - _aiOperationWindow.Height - 10;
-            _aiOperationWindow.Left = left;
-            _aiOperationWindow.Top = top;
-            _aiOperationWindow.Show();
-            _aiOperationWindow.Activate();
+            _aiOperationWindow.ShowAt(left, top);
         }
     }
 
@@ -376,11 +373,49 @@ public partial class DockWindow : Window
             ResetAllMagnification();
         };
 
-        // クリック: アプリ起動/前面表示
-        container.MouseLeftButtonUp += (_, _) =>
+        // クリック: アプリ起動/前面表示/選択
+        container.MouseLeftButtonUp += (_, e) =>
         {
-            if (item.IsRunning && item.WindowHandle != IntPtr.Zero)
+            if (item.IsRunning && item.Windows.Count > 1)
             {
+                var menu = new ContextMenu { Style = (Style)FindResource("ModernContextMenu") };
+
+                var titleItem = new MenuItem 
+                { 
+                    Header = "ウィンドウを選択", 
+                    Style = (Style)FindResource("ModernMenuItem"),
+                    IsEnabled = false,
+                    Foreground = new SolidColorBrush(WpfColor.FromRgb(200, 200, 220))
+                };
+                menu.Items.Add(titleItem);
+                menu.Items.Add(new Separator { Background = new SolidColorBrush(WpfColor.FromArgb(40, 255, 255, 255)), Margin = new Thickness(6, 2, 6, 2) });
+
+                foreach (var win in item.Windows)
+                {
+                    var winItem = new MenuItem
+                    {
+                        Header = string.IsNullOrWhiteSpace(win.Title) ? "名称未設定ウィンドウ" : win.Title,
+                        Style = (Style)FindResource("ModernMenuItem")
+                    };
+                    winItem.Click += (s, args) =>
+                    {
+                        Helpers.NativeMethods.BringWindowToFront(win.Handle);
+                    };
+                    menu.Items.Add(winItem);
+                }
+
+                menu.PlacementTarget = container;
+                menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
+                menu.IsOpen = true;
+                e.Handled = true;
+            }
+            else if (item.IsRunning && item.Windows.Count == 1)
+            {
+                Helpers.NativeMethods.BringWindowToFront(item.Windows[0].Handle);
+            }
+            else if (item.IsRunning && item.WindowHandle != IntPtr.Zero)
+            {
+                // Fallback
                 Helpers.NativeMethods.BringWindowToFront(item.WindowHandle);
             }
             else if (!string.IsNullOrEmpty(item.ExePath) && System.IO.File.Exists(item.ExePath))
@@ -502,7 +537,14 @@ public partial class DockWindow : Window
     {
         try
         {
-            if (item.WindowHandle != IntPtr.Zero)
+            if (item.Windows.Count > 0)
+            {
+                foreach (var win in item.Windows)
+                {
+                    Helpers.NativeMethods.PostMessage(win.Handle, 0x0010 /*WM_CLOSE*/, IntPtr.Zero, IntPtr.Zero);
+                }
+            }
+            else if (item.WindowHandle != IntPtr.Zero)
             {
                 Helpers.NativeMethods.PostMessage(item.WindowHandle, 0x0010 /*WM_CLOSE*/, IntPtr.Zero, IntPtr.Zero);
             }

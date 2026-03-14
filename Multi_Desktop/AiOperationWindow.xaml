@@ -9,12 +9,31 @@
         ResizeMode="NoResize"
         Width="360" Height="520">
 
+    <Window.RenderTransform>
+        <TranslateTransform Y="0"/>
+    </Window.RenderTransform>
+
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.25"/>
+                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)" From="20" To="0" Duration="0:0:0.3">
+                        <DoubleAnimation.EasingFunction>
+                            <CubicEase EasingMode="EaseOut"/>
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
     <Border x:Name="WindowBorder" CornerRadius="12" Padding="0"
-            BorderBrush="#30ffffff" BorderThickness="0.8">
+            BorderBrush="#40ffffff" BorderThickness="1">
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#e01A1A24" Offset="0"/>
-                <GradientStop Color="#ee101018" Offset="1"/>
+                <GradientStop Color="#f5101018" Offset="0"/>
+                <GradientStop Color="#dd0B0B12" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
         <Border.Effect>

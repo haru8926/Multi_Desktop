@@ -76,6 +76,11 @@ public class DesktopSwitchService
         {
             var dirInfo = new DirectoryInfo(DesktopPath);
 
+            // 追加部分：読み取り専用やシステム属性を強制的に解除する
+            // これをしないと管理者権限でもアクセス拒否エラーになる
+            dirInfo.Attributes &= ~FileAttributes.ReadOnly;
+            dirInfo.Attributes &= ~FileAttributes.System;
+
             // ジャンクション（リパースポイント）の場合は直接削除
             if (dirInfo.Attributes.HasFlag(FileAttributes.ReparsePoint))
             {
@@ -89,7 +94,6 @@ public class DesktopSwitchService
                 dirInfo.MoveTo(backupPath);
             }
         }
-
         // 新しいジャンクションを作成
         using var process = new Process
         {

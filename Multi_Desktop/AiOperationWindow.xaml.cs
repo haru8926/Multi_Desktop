@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using Multi_Desktop.Models;
 using Multi_Desktop.Services;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
@@ -518,8 +519,8 @@ public partial class AiOperationWindow : Window
         var container = new Border
         {
             Margin = isUser
-                ? new Thickness(40, 0, 0, 6)
-                : new Thickness(0, 0, 20, 6),
+                ? new Thickness(40, 0, 0, 10)
+                : new Thickness(0, 0, 20, 10),
             HorizontalAlignment = isUser
                 ? System.Windows.HorizontalAlignment.Right
                 : System.Windows.HorizontalAlignment.Left,
@@ -555,10 +556,17 @@ public partial class AiOperationWindow : Window
         var bubble = new Border
         {
             Background = new SolidColorBrush(isUser
-                ? System.Windows.Media.Color.FromArgb(0x66, 0x1A, 0x6A, 0xFF) // モダンなブルー
-                : System.Windows.Media.Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)), // 半透明ホワイト
-            CornerRadius = new CornerRadius(12, 12, isUser ? 2 : 12, isUser ? 12 : 2),
-            Padding = new Thickness(12, 8, 12, 8),
+                ? System.Windows.Media.Color.FromArgb(0xFF, 0x0E, 0x63, 0xCE) // モダンなブルーアクセント (少し濃い目)
+                : System.Windows.Media.Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF)), // 半透明ホワイト
+            CornerRadius = new CornerRadius(14, 14, isUser ? 4 : 14, isUser ? 14 : 4),
+            Padding = new Thickness(14, 10, 14, 10),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius = 12,
+                ShadowDepth = 3,
+                Color = Colors.Black,
+                Opacity = 0.3
+            }
         };
 
         var tb = new TextBlock
@@ -578,6 +586,19 @@ public partial class AiOperationWindow : Window
         container.Child = panel;
 
         ChatPanel.Children.Add(container);
+
+        // --- アニメーション ---
+        var transform = new TranslateTransform { Y = 12 };
+        container.RenderTransform = transform;
+        container.Opacity = 0;
+
+        var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        var animY = new DoubleAnimation(12, 0, TimeSpan.FromMilliseconds(300)) { EasingFunction = easing };
+        var animOpacity = new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(250)) { EasingFunction = easing };
+
+        transform.BeginAnimation(TranslateTransform.YProperty, animY);
+        container.BeginAnimation(UIElement.OpacityProperty, animOpacity);
 
         // スクロールを最下部に
         ChatScrollViewer.ScrollToEnd();
