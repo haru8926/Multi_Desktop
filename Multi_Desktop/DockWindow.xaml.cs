@@ -110,6 +110,11 @@ public partial class DockWindow : Window
         AiButtonBorder.Width = size;
         AiButtonBorder.Height = size;
         AiSeparator.Height = size * 0.55;
+        YoutubeButtonContainer.Width = size + 4;
+        YoutubeButtonBorder.Width = size;
+        YoutubeButtonBorder.Height = size;
+        YoutubeButtonIcon.FontSize = size * 0.42;
+        YoutubeSeparator.Height = size * 0.55;
     }
 
     /// <summary>設定とAIボタンのイベントおよびホバーアニメーションを設定</summary>
@@ -128,8 +133,22 @@ public partial class DockWindow : Window
         AiButtonContainer.MouseLeftButtonUp += AiButton_Click;
         AiButtonContainer.MouseEnter += (_, _) => AnimateScale(AiButtonBorder, 1.2, _magnifyDuration);
         AiButtonContainer.MouseLeave += (_, _) => AnimateScale(AiButtonBorder, 1.0, _magnifyDuration);
+        YoutubeButtonContainer.MouseLeftButtonUp += YoutubeButton_Click;
+        YoutubeButtonContainer.MouseEnter += (_, _) => AnimateScale(YoutubeButtonBorder, 1.2, _magnifyDuration);
+        YoutubeButtonContainer.MouseLeave += (_, _) => AnimateScale(YoutubeButtonBorder, 1.0, _magnifyDuration);
     }
-
+    private void YoutubeButton_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        // 状態に応じて起動・終了を切り替える (トグル)
+        if (YoutubeTvWindowManager.IsYoutubeModeActive)
+        {
+            YoutubeTvWindowManager.CloseAllWindows();
+        }
+        else
+        {
+            YoutubeTvWindowManager.ShowAllWindows();
+        }
+    }
     private void AiButton_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (_aiOperationWindow == null || !_aiOperationWindow.IsLoaded)
@@ -750,8 +769,14 @@ public partial class DockWindow : Window
         _hotZoneTimer.Tick += (_, _) =>
         {
             bool isFullScreen = Helpers.NativeMethods.IsForegroundFullScreen();
-            this.Visibility = isFullScreen ? Visibility.Collapsed : Visibility.Visible;
 
+            // ★ Youtubeモード実行中は、フルスクリーンであっても強制的にDockを隠さない ★
+            if (YoutubeTvWindowManager.IsYoutubeModeActive)
+            {
+                isFullScreen = false;
+            }
+
+            this.Visibility = isFullScreen ? Visibility.Collapsed : Visibility.Visible;
             if (!isFullScreen)
             {
                 var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;

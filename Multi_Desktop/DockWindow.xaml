@@ -172,7 +172,37 @@
                             CornerRadius="1"
                             Margin="4,0,4,6"
                             VerticalAlignment="Bottom"/>
+                    <Grid x:Name="YoutubeButtonContainer"
+      Margin="2,0,2,0"
+      VerticalAlignment="Bottom"
+      Cursor="Hand">
+                        <Border x:Name="YoutubeButtonBorder"
+            CornerRadius="12"
+            Background="#cc0000"
+            VerticalAlignment="Bottom"
+            RenderTransformOrigin="0.5,1.0">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <TextBlock x:Name="YoutubeButtonIcon"
+                   Text="▶"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Foreground="White"/>
+                        </Border>
+                        <Grid.ToolTip>
+                            <ToolTip Content="YouTube TV モード"
+                 Style="{StaticResource DockToolTip}"/>
+                        </Grid.ToolTip>
+                    </Grid>
 
+                    <Border x:Name="YoutubeSeparator"
+        Width="2"
+        Background="#30ffffff"
+        CornerRadius="1"
+        Margin="4,0,4,6"
+        VerticalAlignment="Bottom"/>
                     <!-- 設定ボタン -->
                     <Grid x:Name="SettingsButtonContainer"
                           Margin="2,0,2,0"
