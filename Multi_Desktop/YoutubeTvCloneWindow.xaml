@@ -1,4 +1,4 @@
-﻿<Window x:Class="Multi_Desktop.YoutubeTvCloneWindow"
+<Window x:Class="Multi_Desktop.YoutubeTvCloneWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="YouTube TV (Clone)" 
@@ -20,11 +20,12 @@
         </EventTrigger>
     </Window.Triggers>
 
-    <Grid>
-        <Rectangle x:Name="cloneRectangle">
-            <Rectangle.Fill>
-                <VisualBrush x:Name="visualBrush" Stretch="Uniform" />
-            </Rectangle.Fill>
-        </Rectangle>
+    <Grid ClipToBounds="True">
+        <!-- PrintWindowでキャプチャしたビットマップを表示するImage -->
+        <Image x:Name="cloneImage"
+               Stretch="UniformToFill"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center"
+               RenderOptions.BitmapScalingMode="LowQuality"/>
     </Grid>
 </Window>

@@ -766,8 +766,8 @@ internal static partial class NativeMethods
             // 2. スポーンされた WorkerW の子にする（壁紙の上、デスクトップアイコンの下）
             SetParent(hWnd, workerW);
             ShowWindow(hWnd, SW_SHOW);
-            // 子ウィンドウの座標は親(WorkerW)からの相対座標なので (0, 0) から配置
-            SetWindowPos(hWnd, IntPtr.Zero, 0, 0, width, height,
+            // WorkerW は仮想デスクトップ全体にまたがるので、各ディスプレイの座標をそのまま使う
+            SetWindowPos(hWnd, IntPtr.Zero, x, y, width, height,
                 SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
     }
@@ -811,4 +811,20 @@ internal static partial class NativeMethods
 
     public const uint PUB_SWP_NOACTIVATE = 0x0010;
     public const uint PUB_SWP_SHOWWINDOW = 0x0040;
+
+
+
+    /// <summary>
+    /// ウィンドウを最背面（HWND_BOTTOM）に配置する。
+    /// WorkerW の子にはしないため、通常のウィンドウAPIが引き続き使える。
+    /// </summary>
+    public static void SetWindowToBottom(IntPtr hWnd)
+    {
+        // WS_EX_TOPMOST を解除
+        RemoveTopmostStyle(hWnd);
+
+        // 最背面に配置
+        SetWindowPos(hWnd, HWND_BOTTOM, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
 }

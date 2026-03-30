@@ -147,14 +147,18 @@ public partial class DockWindow : Window
             var menuFull = new System.Windows.Controls.MenuItem { Header = "全画面モード" };
             menuFull.Click += (s, ev) => YoutubeTvWindowManager.ChangeMode(YoutubeMode.FullScreen);
 
-            var menuBg = new System.Windows.Controls.MenuItem { Header = "背景モード" };
+            var menuBg = new System.Windows.Controls.MenuItem { Header = "背景モード（ぼかしあり）" };
             menuBg.Click += (s, ev) => YoutubeTvWindowManager.ChangeMode(YoutubeMode.Background);
+
+            var menuBgClear = new System.Windows.Controls.MenuItem { Header = "背景モード（ぼかしなし）" };
+            menuBgClear.Click += (s, ev) => YoutubeTvWindowManager.ChangeMode(YoutubeMode.BackgroundClear);
 
             var menuClose = new System.Windows.Controls.MenuItem { Header = "終了" };
             menuClose.Click += (s, ev) => YoutubeTvWindowManager.CloseAllWindows();
 
             contextMenu.Items.Add(menuFull);
             contextMenu.Items.Add(menuBg);
+            contextMenu.Items.Add(menuBgClear);
             contextMenu.Items.Add(new System.Windows.Controls.Separator());
             contextMenu.Items.Add(menuClose);
 
@@ -791,6 +795,12 @@ public partial class DockWindow : Window
 
             // ★ Youtubeモード実行中は、フルスクリーンであっても強制的にDockを隠さない ★
             if (YoutubeTvWindowManager.IsYoutubeModeActive)
+            {
+                isFullScreen = false;
+            }
+
+            // ★ 仮想デスクトップオーバーレイが表示中も、Dockを隠さない ★
+            if (YoutubeTvWindowManager.IsDesktopOverlayActive)
             {
                 isFullScreen = false;
             }

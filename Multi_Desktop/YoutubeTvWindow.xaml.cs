@@ -65,14 +65,26 @@ namespace Multi_Desktop
 
             webView.CoreWebView2.Navigate("https://www.youtube.com/tv");
         }
-        public async void SetBackgroundMode(bool isBackground)
+        public async void SetBackgroundMode(bool isBackground, bool useBlur = true)
         {
             if (webView?.CoreWebView2 == null) return;
 
-            // 背景モードならぼかし(20px)と少し暗く(0.6)する。フルスクリーンなら元に戻す
-            string script = isBackground
-                ? "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'blur(20px) brightness(0.6)';"
-                : "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'none';";
+            string script;
+            if (!isBackground)
+            {
+                // フルスクリーンモードに戻す（フィルタなし）
+                script = "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'none';";
+            }
+            else if (useBlur)
+            {
+                // 背景モード（ぼかしあり）：ぼかし(20px)と少し暗く(0.6)する
+                script = "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'blur(20px) brightness(0.6)';";
+            }
+            else
+            {
+                // 背景モード（ぼかしなし）：少し暗くするだけ
+                script = "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'brightness(0.7)';";
+            }
 
             await webView.CoreWebView2.ExecuteScriptAsync(script);
         }
