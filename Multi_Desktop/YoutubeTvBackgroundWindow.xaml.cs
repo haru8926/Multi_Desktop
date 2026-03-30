@@ -46,30 +46,33 @@ namespace Multi_Desktop
         public void StartMirroring(WebView2 webView, int captureIntervalMs = 33)
         {
             _webView = webView;
-
-            // 仮想スクリーン全体のサイズを計算
             var virtualScreen = System.Windows.Forms.SystemInformation.VirtualScreen;
 
-            // 各モニターに Image を配置
+            // システムDPIスケールを取得
+            double scaleX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth;
+            double scaleY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height / System.Windows.SystemParameters.PrimaryScreenHeight;
+
             MonitorCanvas.Children.Clear();
             _monitorImages.Clear();
 
             foreach (var screen in System.Windows.Forms.Screen.AllScreens)
             {
-                var img = new Image
-                {
-                    Stretch = Stretch.UniformToFill
-                };
+                var img = new Image { Stretch = Stretch.UniformToFill };
                 RenderOptions.SetBitmapScalingMode(img, BitmapScalingMode.LowQuality);
+                
+                // 物理ピクセルを論理座標に変換
+                double logicalX = screen.Bounds.X / scaleX;
+                double logicalY = screen.Bounds.Y / scaleY;
+                double logicalW = screen.Bounds.Width / scaleX;
+                double logicalH = screen.Bounds.Height / scaleY;
+                double logicalVirtualX = virtualScreen.X / scaleX;
+                double logicalVirtualY = virtualScreen.Y / scaleY;
 
-                // Canvas 内での位置は virtualScreen 左上からの相対座標
-                Canvas.SetLeft(img, screen.Bounds.X - virtualScreen.X);
-                Canvas.SetTop(img, screen.Bounds.Y - virtualScreen.Y);
-                img.Width = screen.Bounds.Width;
-                img.Height = screen.Bounds.Height;
-
-                // クリッピング: 各モニター領域で切り取る
-                img.Clip = new RectangleGeometry(new Rect(0, 0, screen.Bounds.Width, screen.Bounds.Height));
+                Canvas.SetLeft(img, logicalX - logicalVirtualX);
+                Canvas.SetTop(img, logicalY - logicalVirtualY);
+                img.Width = logicalW;
+                img.Height = logicalH;
+                img.Clip = new RectangleGeometry(new Rect(0, 0, logicalW, logicalH));
 
                 MonitorCanvas.Children.Add(img);
                 _monitorImages.Add(img);

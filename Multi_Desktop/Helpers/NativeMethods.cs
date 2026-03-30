@@ -291,6 +291,7 @@ internal static partial class NativeMethods
         public uint dwFlags;
     }
 
+
     /// <summary>
     /// 指定された物理座標を含むモニターの論理（WPF）座標の矩形を取得する
     /// スケーリングやマルチモニターのオフセットによるWPF側の座標ズレを補正する
@@ -298,34 +299,35 @@ internal static partial class NativeMethods
     public static System.Windows.Rect GetLogicalScreenBounds(System.Windows.Point physicalPoint)
     {
         var pt = new System.Drawing.Point((int)physicalPoint.X, (int)physicalPoint.Y);
-        var hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+        var screen = System.Windows.Forms.Screen.FromPoint(pt);
 
-        if (hMonitor != IntPtr.Zero)
+        double scaleX = 1.0;
+        double scaleY = 1.0;
+
+        try
         {
-            var mi = new MONITORINFO();
-            mi.cbSize = Marshal.SizeOf<MONITORINFO>();
-            if (GetMonitorInfo(hMonitor, ref mi))
+            const uint MONITOR_DEFAULTTONEAREST = 2;
+            IntPtr hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+            if (hMonitor != IntPtr.Zero)
             {
-                // DPI を取得
-                uint dpiX = 96;
-                uint dpiY = 96;
-                GetDpiForMonitor(hMonitor, 0 /* MDT_EFFECTIVE_DPI */, out dpiX, out dpiY);
-
-                double scaleX = dpiX / 96.0;
-                double scaleY = dpiY / 96.0;
-
-                return new System.Windows.Rect(
-                    mi.rcMonitor.Left / scaleX,
-                    mi.rcMonitor.Top / scaleY,
-                    (mi.rcMonitor.Right - mi.rcMonitor.Left) / scaleX,
-                    (mi.rcMonitor.Bottom - mi.rcMonitor.Top) / scaleY
-                );
+                if (GetDpiForMonitor(hMonitor, 0 /* MDT_EFFECTIVE_DPI */, out uint dpiX, out uint dpiY) == 0)
+                {
+                    scaleX = dpiX / 96.0;
+                    scaleY = dpiY / 96.0;
+                }
             }
         }
-        
-        // フォールバック
-        var screen = System.Windows.Forms.Screen.FromPoint(new System.Drawing.Point((int)physicalPoint.X, (int)physicalPoint.Y));
-        return new System.Windows.Rect(screen.Bounds.X, screen.Bounds.Y, screen.Bounds.Width, screen.Bounds.Height);
+        catch { }
+
+        if (scaleX <= 0) scaleX = 1.0;
+        if (scaleY <= 0) scaleY = 1.0;
+
+        return new System.Windows.Rect(
+            screen.Bounds.Left / scaleX,
+            screen.Bounds.Top / scaleY,
+            screen.Bounds.Width / scaleX,
+            screen.Bounds.Height / scaleY
+        );
     }
 
     // ─── ウィンドウ列挙 ────────────────────────────────

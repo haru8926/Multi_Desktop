@@ -264,15 +264,15 @@ namespace Multi_Desktop
 
                     using var ms = new MemoryStream();
 
-                    // WebView2 自身のレンダリング内容を JPEG でキャプチャ（PNGより大幅に高速）
+                    // WebView2 自身のレンダリング内容を PNG でキャプチャ
                     await _webView.CoreWebView2.CapturePreviewAsync(
-                        CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
+                        CoreWebView2CapturePreviewImageFormat.Png, ms);
 
                     if (token.IsCancellationRequested) return;
 
                     ms.Position = 0;
 
-                    // JPEG → BitmapImage にデコード
+                    // PNG → BitmapImage にデコード
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;

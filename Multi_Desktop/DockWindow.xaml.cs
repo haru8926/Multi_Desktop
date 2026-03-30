@@ -763,12 +763,14 @@ public partial class DockWindow : Window
     private System.Windows.Point GetLogicalMousePosition()
     {
         var p = System.Windows.Forms.Cursor.Position;
-        var source = PresentationSource.FromVisual(this);
-        if (source?.CompositionTarget != null)
-        {
-            return source.CompositionTarget.TransformFromDevice.Transform(new System.Windows.Point(p.X, p.Y));
-        }
-        return new System.Windows.Point(p.X, p.Y);
+        
+        double scaleX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth;
+        double scaleY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height / System.Windows.SystemParameters.PrimaryScreenHeight;
+
+        if (scaleX <= 0) scaleX = 1.0;
+        if (scaleY <= 0) scaleY = 1.0;
+
+        return new System.Windows.Point(p.X / scaleX, p.Y / scaleY);
     }
 
     /// <summary>マウスがDock領域内にあるか判定（余裕を持たせた広い範囲）</summary>

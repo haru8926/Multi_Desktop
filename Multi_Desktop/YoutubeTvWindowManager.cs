@@ -65,15 +65,13 @@ namespace Multi_Desktop
                 _mainWindow.Topmost = false;
                 _mainWindow.SetBackgroundMode(true, useBlur);
 
-                // 3. メインウィンドウをプライマリディスプレイの背景(WorkerW)に配置
-                //    ※ これは以前から正常に動作している方式
-                NativeMethods.SetWindowToBackground(mainHwnd,
-                    primaryScreen.Bounds.X, primaryScreen.Bounds.Y,
-                    primaryScreen.Bounds.Width, primaryScreen.Bounds.Height);
+                // 3. メインウィンドウを最背面(HWND_BOTTOM)に配置
+                //    WorkerWに入れないため、PrintWindow対象として60FPSでキャプチャ可能になり、座標ズレも防げる
+                NativeMethods.SetWindowToBottom(mainHwnd);
 
                 // 4. サブディスプレイ用クローンを作成
-                //    ※ WorkerWには入れず、CapturePreview + HWND_BOTTOM で最背面配置
-                CreateCloneWindows(CloneCaptureMode.WebViewCapture, 33);
+                //    ※ WorkerWの制約がなくなったため、PrintWindowで高速キャプチャ可能
+                CreateCloneWindows(CloneCaptureMode.PrintWindow, 16);
 
                 // 5. 各クローンウィンドウを最背面（HWND_BOTTOM）に配置
                 PushCloneWindowsToBottom();
@@ -222,17 +220,22 @@ namespace Multi_Desktop
 
         private static void SetWindowToScreen(System.Windows.Window win, Screen screen)
         {
-            // DPIスケーリングを考慮してWPF論理座標に変換する
-            // Screen.Bounds は物理ピクセル座標だが、WPFの Left/Top/Width/Height は論理座標
-            var logicalBounds = NativeMethods.GetLogicalScreenBounds(
-                new System.Windows.Point(screen.Bounds.Left + screen.Bounds.Width / 2,
-                                         screen.Bounds.Top + screen.Bounds.Height / 2));
-
-            win.Left = logicalBounds.Left;
-            win.Top = logicalBounds.Top;
-            win.Width = logicalBounds.Width;
-            win.Height = logicalBounds.Height;
+            win.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
             win.WindowState = System.Windows.WindowState.Normal;
+            
+            // WPFの初期化を完了させるため、未確保の場合はHandleを生成
+            var helper = new WindowInteropHelper(win);
+            IntPtr hwnd = helper.Handle;
+            if (hwnd == IntPtr.Zero)
+            {
+                hwnd = helper.EnsureHandle();
+            }
+
+            // WPFの不正確なDPI論理座標変換を使わず、Win32API(SetWindowPos)で物理ピクセル単位で直接モニター領域に配置する
+            NativeMethods.MoveWindowPos(hwnd, IntPtr.Zero,
+                screen.Bounds.Left, screen.Bounds.Top,
+                screen.Bounds.Width, screen.Bounds.Height,
+                NativeMethods.PUB_SWP_NOACTIVATE | NativeMethods.PUB_SWP_SHOWWINDOW);
         }
 
         public static void CloseAllWindows()
