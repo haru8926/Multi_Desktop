@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
@@ -17,8 +17,15 @@ namespace Multi_Desktop
         {
             var appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
             var userDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName, "YoutubeTVProfile");
-            var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder, null);
 
+            // ★ ここを修正！WebView2のバックグラウンド省エネ機能を無効化する引数を追加
+            var options = new CoreWebView2EnvironmentOptions
+            {
+                AdditionalBrowserArguments = "--disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
+            };
+
+            // options を渡して初期化
+            var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
             await webView.EnsureCoreWebView2Async(env);
 
             webView.CoreWebView2.Settings.UserAgent = "Mozilla/5.0 (Web0S; SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5283.0 Safari/537.36 SmartTV";
@@ -57,6 +64,40 @@ namespace Multi_Desktop
             // ★ ここまで ★
 
             webView.CoreWebView2.Navigate("https://www.youtube.com/tv");
+        }
+        public async void SetBackgroundMode(bool isBackground)
+        {
+            if (webView?.CoreWebView2 == null) return;
+
+            // 背景モードならぼかし(20px)と少し暗く(0.6)する。フルスクリーンなら元に戻す
+            string script = isBackground
+                ? "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'blur(20px) brightness(0.6)';"
+                : "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'none';";
+
+            await webView.CoreWebView2.ExecuteScriptAsync(script);
+        }
+
+        /// <summary>
+        /// WebView2リソースを確実に解放する。ウィンドウを閉じる前に呼び出すこと。
+        /// </summary>
+        public void DisposeWebView()
+        {
+            try
+            {
+                if (webView != null)
+                {
+                    if (webView.CoreWebView2 != null)
+                    {
+                        webView.CoreWebView2.Navigate("about:blank");
+                    }
+                    webView.Dispose();
+                    webView = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"DisposeWebView failed: {ex.Message}");
+            }
         }
     }
 }

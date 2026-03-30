@@ -5,7 +5,8 @@
         Title="YouTube TV (Main)" 
         WindowStyle="None" 
         Topmost="True"
-        AllowsTransparency="True" 
+        AllowsTransparency="False" 
+        ResizeMode="NoResize"
         Background="Black"
         ShowInTaskbar="False">
 

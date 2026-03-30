@@ -4,7 +4,8 @@
         Title="YouTube TV (Clone)" 
         WindowStyle="None" 
         Topmost="True"
-        AllowsTransparency="True" 
+        AllowsTransparency="False" 
+        ResizeMode="NoResize"
         Background="Black"
         ShowInTaskbar="False">
 

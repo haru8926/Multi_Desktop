@@ -75,8 +75,7 @@ internal static partial class NativeMethods
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string? lpszWindow);
-
+    public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string? lpszWindow);
     /// <summary>タスクバーを画面外に押し出す</summary>
     private static void ForcePushTaskbarOffScreen()
     {
@@ -691,4 +690,125 @@ internal static partial class NativeMethods
         }
         catch { }
     }
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, IntPtr lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+    private const uint SMTO_NORMAL = 0x0000;
+    private const uint MSG_SPAWN_WORKER = 0x052C;
+
+    /// <summary>
+    /// 指定したウィンドウをデスクトップアイコンの背後(壁紙の領域)に配置します。
+    /// </summary>
+    [DllImport("user32.dll")]
+    static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+    const uint GW_CHILD = 5;
+    private static IntPtr _originalParent = IntPtr.Zero;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetParent(IntPtr hWnd);
+
+    private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+    private static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+
+    /// <summary>
+    /// WS_EX_TOPMOST 拡張スタイルを Win32 レベルで除去する
+    /// </summary>
+    private static void RemoveTopmostStyle(IntPtr hWnd)
+    {
+        // HWND_NOTOPMOST で TOPMOST フラグを解除
+        SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0,
+            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+        // WS_EX_TOPMOST 拡張スタイルも直接除去する
+        long exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+        const long WS_EX_TOPMOST_FLAG = 0x00000008L;
+        if ((exStyle & WS_EX_TOPMOST_FLAG) != 0)
+        {
+            SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle & ~WS_EX_TOPMOST_FLAG);
+        }
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern long SetWindowLongPtr(IntPtr hWnd, int nIndex, long dwNewLong);
+
+    public static void SetWindowToBackground(IntPtr hWnd, int x, int y, int width, int height)
+    {
+        // 1. まず WS_EX_TOPMOST を Win32 レベルで確実に解除（SetParent前にやること）
+        RemoveTopmostStyle(hWnd);
+
+        IntPtr progman = FindWindow("Progman", null);
+        SendMessageTimeout(progman, MSG_SPAWN_WORKER, UIntPtr.Zero, IntPtr.Zero, SMTO_NORMAL, 1000, out _);
+
+        // SHELLDLL_DefView を含むウィンドウの後ろにスポーンされた WorkerW を探す
+        IntPtr workerW = IntPtr.Zero;
+        EnumWindows((hwnd, lParam) =>
+        {
+            IntPtr p = FindWindowEx(hwnd, IntPtr.Zero, "SHELLDLL_DefView", null);
+            if (p != IntPtr.Zero)
+            {
+                workerW = FindWindowEx(IntPtr.Zero, hwnd, "WorkerW", null);
+                if (workerW == IntPtr.Zero)
+                    workerW = hwnd;
+                return false;
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        if (workerW != IntPtr.Zero)
+        {
+            // 2. スポーンされた WorkerW の子にする（壁紙の上、デスクトップアイコンの下）
+            SetParent(hWnd, workerW);
+            ShowWindow(hWnd, SW_SHOW);
+            // 子ウィンドウの座標は親(WorkerW)からの相対座標なので (0, 0) から配置
+            SetWindowPos(hWnd, IntPtr.Zero, 0, 0, width, height,
+                SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+    }
+
+    public static void RestoreWindowFromBackground(IntPtr hWnd)
+    {
+        // 親をデスクトップ(NULL)に戻す
+        SetParent(hWnd, IntPtr.Zero);
+    }
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+    /// <summary>
+    /// 指定したウィンドウのすべての子孫ウィンドウを再帰的に列挙してログに出力します。
+    /// </summary>
+    public static void EnumChildWindowsRecursive(IntPtr parent, int depth = 0)
+    {
+        EnumChildWindows(parent, (hwnd, lParam) =>
+        {
+            var sb = new System.Text.StringBuilder(256);
+            GetClassName(hwnd, sb, sb.Capacity);
+            var className = sb.ToString();
+
+            var title = new System.Text.StringBuilder(GetWindowTextLength(hwnd) + 1);
+            GetWindowText(hwnd, title, title.Capacity);
+
+            // 階層がわかるように空白でインデント（字下げ）して出力
+            System.Diagnostics.Debug.WriteLine($"{new string(' ', depth * 2)}HWND: {hwnd}, Class: {className}, Title: {title}");
+
+            // さらにその子供がいれば再帰的に探索
+            EnumChildWindowsRecursive(hwnd, depth + 1);
+            return true;
+        }, IntPtr.Zero);
+    }
+    public static bool MoveWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter,
+    int x, int y, int cx, int cy, uint uFlags)
+    {
+        return SetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+    }
+
+    public const uint PUB_SWP_NOACTIVATE = 0x0010;
+    public const uint PUB_SWP_SHOWWINDOW = 0x0040;
 }

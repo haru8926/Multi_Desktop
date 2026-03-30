@@ -139,13 +139,32 @@ public partial class DockWindow : Window
     }
     private void YoutubeButton_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        // 状態に応じて起動・終了を切り替える (トグル)
         if (YoutubeTvWindowManager.IsYoutubeModeActive)
         {
-            YoutubeTvWindowManager.CloseAllWindows();
+            // 既に起動している場合は選択肢(ContextMenu)を表示する
+            var contextMenu = new System.Windows.Controls.ContextMenu();
+
+            var menuFull = new System.Windows.Controls.MenuItem { Header = "全画面モード" };
+            menuFull.Click += (s, ev) => YoutubeTvWindowManager.ChangeMode(YoutubeMode.FullScreen);
+
+            var menuBg = new System.Windows.Controls.MenuItem { Header = "背景モード" };
+            menuBg.Click += (s, ev) => YoutubeTvWindowManager.ChangeMode(YoutubeMode.Background);
+
+            var menuClose = new System.Windows.Controls.MenuItem { Header = "終了" };
+            menuClose.Click += (s, ev) => YoutubeTvWindowManager.CloseAllWindows();
+
+            contextMenu.Items.Add(menuFull);
+            contextMenu.Items.Add(menuBg);
+            contextMenu.Items.Add(new System.Windows.Controls.Separator());
+            contextMenu.Items.Add(menuClose);
+
+            // ボタンのすぐ下にメニューを表示
+            contextMenu.PlacementTarget = sender as System.Windows.UIElement;
+            contextMenu.IsOpen = true;
         }
         else
         {
+            // 起動していなければ通常通り全画面で起動
             YoutubeTvWindowManager.ShowAllWindows();
         }
     }
