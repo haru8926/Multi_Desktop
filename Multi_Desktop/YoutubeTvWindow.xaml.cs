@@ -65,30 +65,54 @@ namespace Multi_Desktop
 
             webView.CoreWebView2.Navigate("https://www.youtube.com/tv");
         }
+        [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        private const int GWL_EXSTYLE = -20;
+        private const int WS_EX_TRANSPARENT = 0x00000020;
+
         public async void SetBackgroundMode(bool isBackground, bool useBlur = true)
         {
             if (webView?.CoreWebView2 == null) return;
 
+            // Win32 APIでクリック透過スタイルを付与/解除
+            var helper = new System.Windows.Interop.WindowInteropHelper(this);
+            IntPtr hwnd = helper.Handle;
+            if (hwnd != IntPtr.Zero)
+            {
+                int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+                if (isBackground)
+                {
+                    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT);
+                }
+                else
+                {
+                    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_TRANSPARENT);
+                }
+            }
+
+            // 念のためWPF側も設定
+            this.IsHitTestVisible = !isBackground;
+
             string script;
             if (!isBackground)
             {
-                // フルスクリーンモードに戻す（フィルタなし）
                 script = "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'none';";
             }
             else if (useBlur)
             {
-                // 背景モード（ぼかしあり）：ぼかし(20px)と少し暗く(0.6)する
                 script = "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'blur(20px) brightness(0.6)';";
             }
             else
             {
-                // 背景モード（ぼかしなし）：少し暗くするだけ
                 script = "document.body.style.transition = 'filter 0.5s'; document.body.style.filter = 'brightness(0.7)';";
             }
 
             await webView.CoreWebView2.ExecuteScriptAsync(script);
         }
-
         /// <summary>
         /// WebView2リソースを確実に解放する。ウィンドウを閉じる前に呼び出すこと。
         /// </summary>

@@ -763,16 +763,23 @@ public partial class DockWindow : Window
     private System.Windows.Point GetLogicalMousePosition()
     {
         var p = System.Windows.Forms.Cursor.Position;
-        
-        double scaleX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width / System.Windows.SystemParameters.PrimaryScreenWidth;
-        double scaleY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height / System.Windows.SystemParameters.PrimaryScreenHeight;
+        var pt = new System.Drawing.Point(p.X, p.Y);
+
+        double scaleX = 1.0;
+        double scaleY = 1.0;
+
+        IntPtr hMonitor = Helpers.NativeMethods.MonitorFromPoint(pt, Helpers.NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (hMonitor != IntPtr.Zero && Helpers.NativeMethods.GetDpiForMonitor(hMonitor, 0, out uint dpiX, out uint dpiY) == 0)
+        {
+            scaleX = dpiX / 96.0;
+            scaleY = dpiY / 96.0;
+        }
 
         if (scaleX <= 0) scaleX = 1.0;
         if (scaleY <= 0) scaleY = 1.0;
 
         return new System.Windows.Point(p.X / scaleX, p.Y / scaleY);
     }
-
     /// <summary>マウスがDock領域内にあるか判定（余裕を持たせた広い範囲）</summary>
     private bool IsMouseOverDockArea(System.Windows.Point mousePos, Rect bounds)
     {

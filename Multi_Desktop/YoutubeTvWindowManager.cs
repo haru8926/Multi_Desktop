@@ -260,5 +260,20 @@ namespace Multi_Desktop
 
             CurrentMode = YoutubeMode.FullScreen;
         }
+        public static async void SendYouTubeKey(string key, string code, int keyCode)
+        {
+            if (_mainWindow?.webView?.CoreWebView2 == null) return;
+
+            // activeElement に向けて keyCode や which を含めた厳密なイベントを発火させる
+            string script = $@"
+        (function() {{
+            const target = document.activeElement || document.body;
+            const eventDict = {{ bubbles: true, cancelable: true, key: '{key}', code: '{code}', keyCode: {keyCode}, which: {keyCode} }};
+            target.dispatchEvent(new KeyboardEvent('keydown', eventDict));
+            target.dispatchEvent(new KeyboardEvent('keyup', eventDict));
+        }})();
+    ";
+            await _mainWindow.webView.CoreWebView2.ExecuteScriptAsync(script);
+        }
     }
 }

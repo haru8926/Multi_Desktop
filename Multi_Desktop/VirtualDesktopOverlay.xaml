@@ -10,13 +10,11 @@
         Topmost="False"
         Focusable="True">
 
-    <Grid x:Name="RootGrid">
-        <!-- デスクトップアイコンを配置するキャンバス -->
-        <ScrollViewer VerticalScrollBarVisibility="Hidden" 
+    <Grid x:Name="RootGrid" Background="#01000000">
+        <ScrollViewer VerticalScrollBarVisibility="Disabled" 
                       HorizontalScrollBarVisibility="Disabled"
                       Background="Transparent">
-            <ItemsControl x:Name="DesktopItemsControl"
-                          Background="Transparent">
+            <ItemsControl x:Name="DesktopItemsControl" Background="Transparent">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <WrapPanel Orientation="Vertical"

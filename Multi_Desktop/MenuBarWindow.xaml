@@ -603,7 +603,43 @@
                             </DockPanel>
                         </Border>
                     </UniformGrid>
+                    <Border x:Name="CC_YoutubeSeparator" Height="0.5" Background="#15ffffff" Margin="0,6,0,6" Visibility="Collapsed"/>
+                    <Border x:Name="CC_YoutubeController" Background="#18ffffff" CornerRadius="10" Padding="12" Margin="0,0,0,6" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="YouTube TV 操作" FontSize="11" Foreground="#88BBEE" Margin="0,0,0,8" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                            <Grid HorizontalAlignment="Center">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="34"/>
+                                    <RowDefinition Height="34"/>
+                                    <RowDefinition Height="34"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="42"/>
+                                    <ColumnDefinition Width="42"/>
+                                    <ColumnDefinition Width="42"/>
+                                </Grid.ColumnDefinitions>
 
+                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource CCTile}" Margin="2" Padding="0" MouseLeftButtonUp="YtUp_Click">
+                                    <TextBlock Text="&#xE70E;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource CCTile}" Margin="2" Padding="0" MouseLeftButtonUp="YtLeft_Click">
+                                    <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource CCTileActive}" Margin="2" Padding="0" MouseLeftButtonUp="YtEnter_Click">
+                                    <TextBlock Text="OK" FontSize="10" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource CCTile}" Margin="2" Padding="0" MouseLeftButtonUp="YtRight_Click">
+                                    <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource CCTile}" Margin="2" Padding="0" MouseLeftButtonUp="YtDown_Click">
+                                    <TextBlock Text="&#xE70D;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <Border Grid.Row="2" Grid.Column="0" Style="{StaticResource CCTile}" Margin="2" Padding="0" Background="#44FF4444" MouseLeftButtonUp="YtBack_Click">
+                                    <TextBlock Text="戻る" FontSize="9" Foreground="#FFDDDD" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                     <!-- プラグインUI用コンテナ -->
                     <StackPanel x:Name="PluginTrayContainer" Margin="0,6,0,0"/>
                 </StackPanel>

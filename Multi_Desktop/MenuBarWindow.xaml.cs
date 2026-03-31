@@ -162,15 +162,20 @@ public partial class MenuBarWindow : Window
         var hwnd = new WindowInteropHelper(this).Handle;
         if (hwnd == IntPtr.Zero) return;
 
-        var source = PresentationSource.FromVisual(this);
-        var dpiScale = source?.CompositionTarget?.TransformToDevice.M22 ?? 1.0;
+        double dpiScale = 1.0;
+        var pt = new System.Drawing.Point(_targetScreen.Bounds.X + 1, _targetScreen.Bounds.Y + 1);
+        IntPtr hMonitor = NativeMethods.MonitorFromPoint(pt, NativeMethods.MONITOR_DEFAULTTONEAREST);
+        if (hMonitor != IntPtr.Zero && NativeMethods.GetDpiForMonitor(hMonitor, 0, out uint _, out uint dpiY) == 0)
+        {
+            dpiScale = dpiY / 96.0;
+        }
+
         var physicalBarHeight = (int)(28 * dpiScale);
 
         NativeMethods.RegisterTopAppBar(hwnd, physicalBarHeight,
             _targetScreen.Bounds.Left, _targetScreen.Bounds.Top, _targetScreen.Bounds.Width);
         _isAppBarRegistered = true;
     }
-
     private void UnregisterAsAppBar()
     {
         if (!_isAppBarRegistered) return;
@@ -191,19 +196,10 @@ public partial class MenuBarWindow : Window
 
     private Rect GetLogicalScreenBounds()
     {
-        var physicalRect = new Rect(_targetScreen.Bounds.X, _targetScreen.Bounds.Y,
-            _targetScreen.Bounds.Width, _targetScreen.Bounds.Height);
-        var source = PresentationSource.FromVisual(this);
-        if (source?.CompositionTarget != null)
-        {
-            var transform = source.CompositionTarget.TransformFromDevice;
-            return new Rect(
-                transform.Transform(physicalRect.TopLeft),
-                transform.Transform(physicalRect.BottomRight));
-        }
-        return physicalRect;
+        // ターゲットスクリーンの左上座標を渡し、モニター固有のDPIで計算された論理矩形を取得する
+        return NativeMethods.GetLogicalScreenBounds(
+            new System.Windows.Point(_targetScreen.Bounds.X + 1, _targetScreen.Bounds.Y + 1));
     }
-
     // ─── 時計 ────────────────────────────────────────
     private void StartClockTimer()
     {
@@ -231,8 +227,14 @@ public partial class MenuBarWindow : Window
     private void UpdateActiveWindowTitle()
     {
         bool isFullScreen = NativeMethods.IsForegroundFullScreen();
-        this.Visibility = isFullScreen ? Visibility.Collapsed : Visibility.Visible;
 
+        // ★ 追加: 仮想デスクトップオーバーレイが表示中の場合は隠さない
+        if (YoutubeTvWindowManager.IsDesktopOverlayActive)
+        {
+            isFullScreen = false;
+        }
+
+        this.Visibility = isFullScreen ? Visibility.Collapsed : Visibility.Visible;
         var title = NativeMethods.GetForegroundWindowTitle();
         if (string.IsNullOrEmpty(title)
             || title == "macOS MenuBar"
@@ -248,7 +250,15 @@ public partial class MenuBarWindow : Window
         _topmostTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
         _topmostTimer.Tick += (_, _) =>
         {
-            if (NativeMethods.IsForegroundFullScreen()) return;
+            bool isFullScreen = NativeMethods.IsForegroundFullScreen();
+
+            // ★ 追加: 仮想デスクトップオーバーレイが表示中の場合は最前面を維持する
+            if (YoutubeTvWindowManager.IsDesktopOverlayActive)
+            {
+                isFullScreen = false;
+            }
+
+            if (isFullScreen) return;
 
             var hwnd = new WindowInteropHelper(this).Handle;
             if (hwnd != IntPtr.Zero)
@@ -258,7 +268,6 @@ public partial class MenuBarWindow : Window
         };
         _topmostTimer.Start();
     }
-
     // ─── ステータス更新 ──────────────────────────────
     private void StartStatusTimer()
     {
@@ -744,9 +753,16 @@ public partial class MenuBarWindow : Window
 
     private void ControlCenterPopup_Opened(object sender, EventArgs e)
     {
-        // 必要な初期化処理
+        bool isYtActive = YoutubeTvWindowManager.IsYoutubeModeActive;
+        CC_YoutubeController.Visibility = isYtActive ? Visibility.Visible : Visibility.Collapsed;
+        CC_YoutubeSeparator.Visibility = isYtActive ? Visibility.Visible : Visibility.Collapsed;
     }
-
+    private void YtUp_Click(object sender, MouseButtonEventArgs e) => YoutubeTvWindowManager.SendYouTubeKey("ArrowUp", "ArrowUp", 38);
+    private void YtDown_Click(object sender, MouseButtonEventArgs e) => YoutubeTvWindowManager.SendYouTubeKey("ArrowDown", "ArrowDown", 40);
+    private void YtLeft_Click(object sender, MouseButtonEventArgs e) => YoutubeTvWindowManager.SendYouTubeKey("ArrowLeft", "ArrowLeft", 37);
+    private void YtRight_Click(object sender, MouseButtonEventArgs e) => YoutubeTvWindowManager.SendYouTubeKey("ArrowRight", "ArrowRight", 39);
+    private void YtEnter_Click(object sender, MouseButtonEventArgs e) => YoutubeTvWindowManager.SendYouTubeKey("Enter", "Enter", 13);
+    private void YtBack_Click(object sender, MouseButtonEventArgs e) => YoutubeTvWindowManager.SendYouTubeKey("Escape", "Escape", 27);
     private void ControlCenterPopup_Closed(object sender, EventArgs e)
     {
         CC_MusicPlayerPlaceholder.Visibility = Visibility.Collapsed;
