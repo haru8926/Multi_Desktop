@@ -58,7 +58,7 @@ internal static partial class NativeMethods
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
     /// <summary>タスクバー非表示を維持するタイマー</summary>
-    private static System.Threading.Timer? _keepHiddenTimer;
+    private static System.Windows.Threading.DispatcherTimer? _keepHiddenTimer;
 
     /// <summary>Windowsタスクバーを非表示にし、全画面を確保する</summary>
     public static void HideTaskbar()
@@ -67,11 +67,17 @@ internal static partial class NativeMethods
         SetTaskbarAutoHide(true);
 
         // 2. タスクバーを画面外に押し出し続ける（マウスが下に行っても見えないようにする）
-        _keepHiddenTimer?.Dispose();
-        _keepHiddenTimer = new System.Threading.Timer(_ =>
+        _keepHiddenTimer?.Stop();
+        _keepHiddenTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(1500)
+        };
+        _keepHiddenTimer.Tick += (_, _) =>
         {
             ForcePushTaskbarOffScreen();
-        }, null, 0, 1500); // すぐ実行し、1500ms間隔で監視
+        };
+        _keepHiddenTimer.Start();
+        ForcePushTaskbarOffScreen(); // 初回分
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
@@ -107,7 +113,7 @@ internal static partial class NativeMethods
     public static void ShowTaskbar()
     {
         // タイマーを停止
-        _keepHiddenTimer?.Dispose();
+        _keepHiddenTimer?.Stop();
         _keepHiddenTimer = null;
 
         var screenH = GetSystemMetrics(SM_CYSCREEN);

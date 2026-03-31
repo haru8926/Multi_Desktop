@@ -388,6 +388,7 @@ public partial class DockWindow : Window
                 var handle = item.WindowHandle;
                 // UIスレッドをブロックしないよう別スレッドでキャプチャ
                 var snapshot = await Task.Run(() => Helpers.NativeMethods.GetWindowSnapshot(handle));
+                if (!this.IsLoaded) return;
                 if (snapshot != null)
                 {
                     previewImage.Source = snapshot;
